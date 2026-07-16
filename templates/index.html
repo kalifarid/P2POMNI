@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FileBridge — Canlı və Qlobal Fayl Ötürmə Platforması</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #0f172a;
+        }
+    </style>
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col justify-between font-sans">
+
+    <header class="border-b border-slate-800 py-4 px-6">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold tracking-wider text-cyan-400">🌐 FileBridge</h1>
+            <span class="text-xs bg-cyan-950 text-cyan-400 border border-cyan-800 px-3 py-1 rounded-full font-mono">v1.0.0 (Live)</span>
+        </div>
+    </header>
+
+    <main class="max-w-4xl w-full mx-auto p-6 flex-grow flex flex-col justify-center">
+        <div class="grid md:grid-cols-2 gap-8 items-center">
+            
+            <div>
+                <h2 class="text-3xl md:text-4xl font-extrabold leading-tight mb-4 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-500">
+                    Kabel yox. Qeydiyyat yox. Cəmi 4 Rəqəmli Kod!
+                </h2>
+                <p class="text-slate-400 mb-6 text-sm md:text-base leading-relaxed">
+                    Fayllarınız heç bir diskdə saxlanmır, birbaşa RAM yaddaşında keçid edərək tam təhlükəsizlik təmin edir. Ötürün və iz qoymadan yox olun.
+                </p>
+                <div class="space-y-2 text-xs text-slate-500">
+                    <p>⚡ <strong>Sıfır Disk İzi:</strong> Fayllar birbaşa RAM-dan ötürülür.</p>
+                    <p>📱 <strong>Platformasız:</strong> iOS, Android və PC arasında problemsiz keçid.</p>
+                </div>
+            </div>
+
+            <div class="bg-slate-800/50 border border-slate-700/60 p-6 rounded-2xl shadow-xl backdrop-blur-sm space-y-6">
+                
+                <div class="flex border-b border-slate-700">
+                    <button id="tab-send" class="flex-1 pb-3 text-center border-b-2 border-cyan-400 text-cyan-400 font-semibold" onclick="switchTab('send')">📤 Fayl Göndər</button>
+                    <button id="tab-receive" class="flex-1 pb-3 text-center border-b-2 border-transparent text-slate-400 font-semibold" onclick="switchTab('receive')">📥 Fayl Qəbul Et</button>
+                </div>
+
+                <div id="section-send" class="space-y-4">
+                    <div id="drop-zone" class="border-2 border-dashed border-slate-600 hover:border-cyan-400 transition rounded-xl p-8 text-center cursor-pointer">
+                        <input type="file" id="file-input" class="hidden">
+                        <p class="text-slate-300 text-sm mb-2" id="file-label">Faylı bura sürükləyin və ya klikləyin</p>
+                        <p class="text-xs text-slate-500">Maksimum fayl həcmi: 32MB</p>
+                    </div>
+                    <button onclick="uploadFile()" id="btn-upload" class="w-full bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-bold py-3 rounded-xl transition">Kod Al</button>
+                    
+                    <div id="result-success" class="hidden bg-cyan-950/50 border border-cyan-800 p-4 rounded-xl text-center space-y-2">
+                        <p class="text-xs text-cyan-400">Faylınız RAM-dadır! Qarşı tərəfə ötürüləcək kod:</p>
+                        <p id="room-code-display" class="text-4xl font-extrabold text-white tracking-widest font-mono animate-pulse">----</p>
+                        <p id="file-name-display" class="text-xs text-slate-400 truncate"></p>
+                    </div>
+                </div>
+
+                <div id="section-receive" class="hidden space-y-4">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-2">4 Rəqəmli Otaq Kodunu Daxil Edin:</label>
+                        <input type="text" id="code-input" maxlength="4" placeholder="Məs: 8402" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-center text-2xl font-mono tracking-widest text-white focus:outline-none focus:border-cyan-400">
+                    </div>
+                    <button onclick="downloadFile()" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 rounded-xl transition">Faylı Endir</button>
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="border-t border-slate-800 py-6 text-center text-xs text-slate-500">
+        <div class="max-w-4xl mx-auto px-6">
+            <p>© 2026 FileBridge. Layihə Müəllifi: Fərid Hümbətzadə.</p>
+        </div>
+    </footer>
+
+    <script>
+        function switchTab(tab) {
+            const tabSend = document.getElementById('tab-send');
+            const tabReceive = document.getElementById('tab-receive');
+            const sectionSend = document.getElementById('section-send');
+            const sectionReceive = document.getElementById('section-receive');
+
+            if (tab === 'send') {
+                tabSend.className = "flex-1 pb-3 text-center border-b-2 border-cyan-400 text-cyan-400 font-semibold";
+                tabReceive.className = "flex-1 pb-3 text-center border-b-2 border-transparent text-slate-400 font-semibold";
+                sectionSend.classList.remove('hidden');
+                sectionReceive.classList.add('hidden');
+            } else {
+                tabSend.className = "flex-1 pb-3 text-center border-b-2 border-transparent text-slate-400 font-semibold";
+                tabReceive.className = "flex-1 pb-3 text-center border-b-2 border-cyan-400 text-cyan-400 font-semibold";
+                sectionSend.classList.add('hidden');
+                sectionReceive.classList.remove('hidden');
+            }
+        }
+
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const fileLabel = document.getElementById('file-label');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                fileLabel.innerText = fileInput.files[0].name;
+            }
+        });
+
+        async function uploadFile() {
+            const file = fileInput.files[0];
+            if (!file) {
+                alert("Zəhmət olmasa əvvəlcə fayl seçin!");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const btn = document.getElementById('btn-upload');
+            btn.disabled = true;
+            btn.innerText = "Yüklənir...";
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('room-code-display').innerText = data.code;
+                    document.getElementById('file-name-display').innerText = data.file_name;
+                    document.getElementById('result-success').classList.remove('hidden');
+                } else {
+                    alert(data.error || "Xəta baş verdi.");
+                }
+            } catch (err) {
+                alert("Server əlaqə xətası!");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Kod Al";
+            }
+        }
+
+        function downloadFile() {
+            const code = document.getElementById('code-input').value.trim();
+            if (code.length !== 4) {
+                alert("Zəhmət olmasa düzgün 4 rəqəmli kod yazın!");
+                return;
+            }
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/download';
+
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'code';
+            input.value = code;
+
+            form.appendChild(input);
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+        }
+    </script>
+</body>
+</html>
+
