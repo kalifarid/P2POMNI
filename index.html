@@ -3,20 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FileBridge — Canlı və Qlobal Fayl Ötürmə Platforması</title>
+    <title>FileBridge — Canlı və Qlobal P2P Fayl Ötürmə Platforması</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <style>
-        body {
-            background-color: #0f172a;
-        }
+        body { background-color: #0f172a; }
     </style>
 </head>
 <body class="text-slate-100 min-h-screen flex flex-col justify-between font-sans">
 
     <header class="border-b border-slate-800 py-4 px-6">
         <div class="max-w-4xl mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-bold tracking-wider text-cyan-400">🌐 FileBridge</h1>
-            <span class="text-xs bg-cyan-950 text-cyan-400 border border-cyan-800 px-3 py-1 rounded-full font-mono">v1.0.0 (Live)</span>
+            <h1 class="text-2xl font-bold tracking-wider text-cyan-400">🌐 FileBridge P2P</h1>
+            <span class="text-xs bg-cyan-950 text-cyan-400 border border-cyan-800 px-3 py-1 rounded-full font-mono">v2.0 (Serverless)</span>
         </div>
     </header>
 
@@ -25,14 +24,14 @@
             
             <div>
                 <h2 class="text-3xl md:text-4xl font-extrabold leading-tight mb-4 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-500">
-                    Kabel yox. Qeydiyyat yox. Cəmi 4 Rəqəmli Kod!
+                    Cihazdan Cihaza Birbaşa Keçid!
                 </h2>
                 <p class="text-slate-400 mb-6 text-sm md:text-base leading-relaxed">
-                    Fayllarınız heç bir diskdə saxlanmır, birbaşa RAM yaddaşında keçid edərək tam təhlükəsizlik təmin edir. Ötürün və iz qoymadan yox olun.
+                    Fayllarınız heç bir serverə yüklənmir. WebRTC texnologiyası ilə birbaşa sizin cihazınızın RAM-ından qarşı tərəfə ötürülür. Tam gizlilik, limitsiz sürət və həcm!
                 </p>
                 <div class="space-y-2 text-xs text-slate-500">
-                    <p>⚡ <strong>Sıfır Disk İzi:</strong> Fayllar birbaşa RAM-dan ötürülür.</p>
-                    <p>📱 <strong>Platformasız:</strong> iOS, Android və PC arasında problemsiz keçid.</p>
+                    <p>🔒 <strong>Ucdan-Uca Şifrələmə:</strong> Fayl yalnız ötürən və qəbul edən arasındadır.</p>
+                    <p>⚡ <strong>Buludsuz:</strong> Heç bir server diski və ya limiti yoxdur.</p>
                 </div>
             </div>
 
@@ -47,14 +46,13 @@
                     <div id="drop-zone" class="border-2 border-dashed border-slate-600 hover:border-cyan-400 transition rounded-xl p-8 text-center cursor-pointer">
                         <input type="file" id="file-input" class="hidden">
                         <p class="text-slate-300 text-sm mb-2" id="file-label">Faylı bura sürükləyin və ya klikləyin</p>
-                        <p class="text-xs text-slate-500">Maksimum fayl həcmi: 32MB</p>
                     </div>
-                    <button onclick="uploadFile()" id="btn-upload" class="w-full bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-bold py-3 rounded-xl transition">Kod Al</button>
+                    <button onclick="startHosting()" id="btn-host" class="w-full bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-bold py-3 rounded-xl transition">Kod Al</button>
                     
                     <div id="result-success" class="hidden bg-cyan-950/50 border border-cyan-800 p-4 rounded-xl text-center space-y-2">
-                        <p class="text-xs text-cyan-400">Faylınız RAM-dadır! Qarşı tərəfə ötürüləcək kod:</p>
+                        <p class="text-xs text-cyan-400">Bağlantı qurulur... Bu kodu qarşı tərəfə göndərin:</p>
                         <p id="room-code-display" class="text-4xl font-extrabold text-white tracking-widest font-mono animate-pulse">----</p>
-                        <p id="file-name-display" class="text-xs text-slate-400 truncate"></p>
+                        <p id="status-text" class="text-xs text-slate-400">Qarşı tərəfin qoşulması gözlənilir...</p>
                     </div>
                 </div>
 
@@ -63,7 +61,7 @@
                         <label class="block text-xs text-slate-400 mb-2">4 Rəqəmli Otaq Kodunu Daxil Edin:</label>
                         <input type="text" id="code-input" maxlength="4" placeholder="Məs: 8402" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-center text-2xl font-mono tracking-widest text-white focus:outline-none focus:border-cyan-400">
                     </div>
-                    <button onclick="downloadFile()" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 rounded-xl transition">Faylı Endir</button>
+                    <button onclick="connectToHost()" id="btn-download" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 rounded-xl transition">Qoşul və Endir</button>
                 </div>
 
             </div>
@@ -78,6 +76,10 @@
     </footer>
 
     <script>
+        let peer = null;
+        let conn = null;
+        let selectedFile = null;
+
         function switchTab(tab) {
             const tabSend = document.getElementById('tab-send');
             const tabReceive = document.getElementById('tab-receive');
@@ -104,68 +106,95 @@
         dropZone.addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', () => {
             if (fileInput.files.length > 0) {
-                fileLabel.innerText = fileInput.files[0].name;
+                selectedFile = fileInput.files[0];
+                fileLabel.innerText = selectedFile.name;
             }
         });
 
-        async function uploadFile() {
-            const file = fileInput.files[0];
-            if (!file) {
+        // 4 rəqəmli kod generasiya edirik
+        function generateShortId() {
+            return Math.floor(1000 + Math.random() * 9000).toString();
+        }
+
+        // GÖNDƏRƏN TƏRƏF (HOST)
+        function startHosting() {
+            if (!selectedFile) {
                 alert("Zəhmət olmasa əvvəlcə fayl seçin!");
                 return;
             }
 
-            const formData = new FormData();
-            formData.append('file', file);
+            const customId = "filebridge-" + generateShortId();
+            peer = new Peer(customId);
 
-            const btn = document.getElementById('btn-upload');
-            btn.disabled = true;
-            btn.innerText = "Yüklənir...";
+            document.getElementById('btn-host').disabled = true;
+            document.getElementById('btn-host').innerText = "Kod hazırlanır...";
 
-            try {
-                const response = await fetch('/upload', {
-                    method: 'POST',
-                    body: formData
+            peer.on('open', (id) => {
+                const shortCode = id.replace("filebridge-", "");
+                document.getElementById('room-code-display').innerText = shortCode;
+                document.getElementById('result-success').classList.remove('hidden');
+            });
+
+            peer.on('connection', (connection) => {
+                conn = connection;
+                document.getElementById('status-text').innerText = "Qarşı tərəf qoşuldu! Fayl ötürülür...";
+                
+                conn.on('open', () => {
+                    // Faylı göndəririk
+                    conn.send({
+                        file: selectedFile,
+                        name: selectedFile.name,
+                        type: selectedFile.type
+                    });
+                    document.getElementById('status-text').innerText = "Fayl uğurla göndərildi! 🎉";
                 });
-                const data = await response.json();
+            });
 
-                if (response.ok) {
-                    document.getElementById('room-code-display').innerText = data.code;
-                    document.getElementById('file-name-display').innerText = data.file_name;
-                    document.getElementById('result-success').classList.remove('hidden');
-                } else {
-                    alert(data.error || "Xəta baş verdi.");
-                }
-            } catch (err) {
-                alert("Server əlaqə xətası!");
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Kod Al";
-            }
+            peer.on('error', (err) => {
+                alert("Bağlantı xətası: " + err.type);
+                location.reload();
+            });
         }
 
-        function downloadFile() {
+        // QƏBUL EDƏN TƏRƏF (CLIENT)
+        function connectToHost() {
             const code = document.getElementById('code-input').value.trim();
             if (code.length !== 4) {
-                alert("Zəhmət olmasa düzgün 4 rəqəmli kod yazın!");
+                alert("Düzgün 4 rəqəmli kod yazın!");
                 return;
             }
 
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '/download';
+            const btn = document.getElementById('btn-download');
+            btn.disabled = true;
+            btn.innerText = "Qoşulur...";
 
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'code';
-            input.value = code;
+            peer = new Peer();
 
-            form.appendChild(input);
-            document.body.appendChild(form);
-            form.submit();
-            document.body.removeChild(form);
+            peer.on('open', () => {
+                const destId = "filebridge-" + code;
+                conn = peer.connect(destId);
+
+                conn.on('data', (data) => {
+                    btn.innerText = "Fayl alınır...";
+                    
+                    // Alınan faylı yükləyirik
+                    const blob = new Blob([data.file], { type: data.type });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = data.name;
+                    link.click();
+
+                    btn.disabled = false;
+                    btn.innerText = "Fayl Endirildi! 🎉";
+                });
+            });
+
+            peer.on('error', (err) => {
+                alert("Otaq tapılmadı və ya aktiv deyil!");
+                btn.disabled = false;
+                btn.innerText = "Qoşul və Endir";
+            });
         }
     </script>
 </body>
 </html>
-
