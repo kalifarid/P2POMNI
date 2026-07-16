@@ -3,102 +3,222 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FileBridge — Canlı və Qlobal P2P Fayl Ötürmə Platforması</title>
+    <title>BridgeSuite — Qlobal P2P Alətlər Paneli</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <style>
-        body { background-color: #0f172a; }
+        body { background-color: #0b0f19; }
+        .sidebar-btn.active {
+            background-color: #1e293b;
+            color: #22d3ee;
+            border-left: 4px solid #22d3ee;
+        }
     </style>
 </head>
-<body class="text-slate-100 min-h-screen flex flex-col justify-between font-sans">
+<body class="text-slate-100 min-h-screen flex flex-col md:flex-row font-sans">
 
-    <header class="border-b border-slate-800 py-4 px-6">
-        <div class="max-w-4xl mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-bold tracking-wider text-cyan-400">🌐 FileBridge P2P</h1>
-            <span class="text-xs bg-cyan-950 text-cyan-400 border border-cyan-800 px-3 py-1 rounded-full font-mono">v2.0 (Serverless)</span>
-        </div>
-    </header>
-
-    <main class="max-w-4xl w-full mx-auto p-6 flex-grow flex flex-col justify-center">
-        <div class="grid md:grid-cols-2 gap-8 items-center">
+    <aside class="w-full md:w-64 bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 p-6 flex flex-col justify-between">
+        <div>
+            <div class="mb-8">
+                <h1 class="text-2xl font-black tracking-wider text-cyan-400">🌐 BridgeSuite</h1>
+                <p class="text-xs text-slate-500 font-mono">v3.0.0 (Serverless Pro)</p>
+            </div>
             
-            <div>
-                <h2 class="text-3xl md:text-4xl font-extrabold leading-tight mb-4 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-500">
-                    Cihazdan Cihaza Birbaşa Keçid!
-                </h2>
-                <p class="text-slate-400 mb-6 text-sm md:text-base leading-relaxed">
-                    Fayllarınız heç bir serverə yüklənmir. WebRTC texnologiyası ilə birbaşa sizin cihazınızın RAM-ından qarşı tərəfə ötürülür. Tam gizlilik, limitsiz sürət və həcm!
-                </p>
-                <div class="space-y-2 text-xs text-slate-500">
-                    <p>🔒 <strong>Ucdan-Uca Şifrələmə:</strong> Fayl yalnız ötürən və qəbul edən arasındadır.</p>
-                    <p>⚡ <strong>Buludsuz:</strong> Heç bir server diski və ya limiti yoxdur.</p>
+            <nav class="space-y-2">
+                <button onclick="switchModule('file')" id="btn-file" class="sidebar-btn active w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                    <span>📁</span> <span>FileBridge (Fayl)</span>
+                </button>
+                <button onclick="switchModule('screen')" id="btn-screen" class="sidebar-btn w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                    <span>📺</span> <span>ScreenBridge (Ekran)</span>
+                </button>
+                <button onclick="switchModule('voice')" id="btn-voice" class="sidebar-btn w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                    <span>🎙️</span> <span>VoiceBridge (Telsiz)</span>
+                </button>
+                <button onclick="switchModule('note')" id="btn-note" class="sidebar-btn w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                    <span>🔐</span> <span>NoteCrypt (Gizli Qeyd)</span>
+                </button>
+            </nav>
+        </div>
+
+        <div class="mt-8 pt-4 border-t border-slate-800 text-xxs text-slate-500">
+            <p>Müəllif: Fərid Hümbətzadə</p>
+            <p class="text-cyan-600">P2P Network Active</p>
+        </div>
+    </aside>
+
+    <main class="flex-grow p-6 md:p-12 flex flex-col justify-between">
+        <div class="max-w-4xl w-full mx-auto my-auto">
+            
+            <div id="mod-file" class="module-section space-y-6">
+                <h2 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">📁 FileBridge — Limitsiz Fayl Ötürülməsi</h2>
+                <p class="text-slate-400 text-sm">Fayllarınız heç bir serverə getmədən birbaşa cihazınızdan qarşı tərəfə ötürülür.</p>
+                <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl max-w-lg space-y-4">
+                    <div class="flex border-b border-slate-800 pb-3">
+                        <button id="file-tab-send" class="flex-1 text-center font-bold text-cyan-400" onclick="toggleFileTab('send')">Göndər</button>
+                        <button id="file-tab-recv" class="flex-1 text-center font-bold text-slate-400" onclick="toggleFileTab('recv')">Qəbul Et</button>
+                    </div>
+                    
+                    <div id="file-send-area" class="space-y-4">
+                        <div id="drop-zone" class="border-2 border-dashed border-slate-700 hover:border-cyan-500 rounded-xl p-8 text-center cursor-pointer transition">
+                            <input type="file" id="file-input" class="hidden">
+                            <span id="file-label" class="text-sm text-slate-400">Faylı bura atın və ya klikləyin</span>
+                        </div>
+                        <button onclick="startHostingFile()" id="btn-file-host" class="w-full bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-bold py-3 rounded-xl transition">Kod Al</button>
+                        <div id="file-success" class="hidden bg-cyan-950/30 border border-cyan-800 p-4 rounded-xl text-center space-y-2">
+                            <p class="text-xs text-cyan-400">Fayl hazırda RAM-da gözləyir. Kod:</p>
+                            <p id="file-code" class="text-4xl font-mono font-bold tracking-widest text-white animate-pulse">----</p>
+                        </div>
+                    </div>
+
+                    <div id="file-recv-area" class="hidden space-y-4">
+                        <input type="text" id="file-code-input" maxlength="4" placeholder="4 rəqəmli kod" class="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 text-center text-xl font-mono tracking-widest text-white">
+                        <button onclick="connectToDownload()" id="btn-file-dl" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 rounded-xl transition">Qoşul və Endir</button>
+                    </div>
                 </div>
             </div>
 
-            <div class="bg-slate-800/50 border border-slate-700/60 p-6 rounded-2xl shadow-xl backdrop-blur-sm space-y-6">
-                
-                <div class="flex border-b border-slate-700">
-                    <button id="tab-send" class="flex-1 pb-3 text-center border-b-2 border-cyan-400 text-cyan-400 font-semibold" onclick="switchTab('send')">📤 Fayl Göndər</button>
-                    <button id="tab-receive" class="flex-1 pb-3 text-center border-b-2 border-transparent text-slate-400 font-semibold" onclick="switchTab('receive')">📥 Fayl Qəbul Et</button>
-                </div>
-
-                <div id="section-send" class="space-y-4">
-                    <div id="drop-zone" class="border-2 border-dashed border-slate-600 hover:border-cyan-400 transition rounded-xl p-8 text-center cursor-pointer">
-                        <input type="file" id="file-input" class="hidden">
-                        <p class="text-slate-300 text-sm mb-2" id="file-label">Faylı bura sürükləyin və ya klikləyin</p>
+            <div id="mod-screen" class="module-section hidden space-y-6">
+                <h2 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-500">📺 ScreenBridge — Canlı Ekran Yayımı</h2>
+                <p class="text-slate-400 text-sm">Heç bir proqram olmadan brauzerinizdən digər cihazlara canlı olaraq ekranı yayımlayın.</p>
+                <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl max-w-lg space-y-4">
+                    <div class="flex border-b border-slate-800 pb-3">
+                        <button id="screen-tab-send" class="flex-1 text-center font-bold text-teal-400" onclick="toggleScreenTab('send')">Yayımla</button>
+                        <button id="screen-tab-recv" class="flex-1 text-center font-bold text-slate-400" onclick="toggleScreenTab('recv')">İzlə</button>
                     </div>
-                    <button onclick="startHosting()" id="btn-host" class="w-full bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-bold py-3 rounded-xl transition">Kod Al</button>
-                    
-                    <div id="result-success" class="hidden bg-cyan-950/50 border border-cyan-800 p-4 rounded-xl text-center space-y-2">
-                        <p class="text-xs text-cyan-400">Bağlantı qurulur... Bu kodu qarşı tərəfə göndərin:</p>
-                        <p id="room-code-display" class="text-4xl font-extrabold text-white tracking-widest font-mono animate-pulse">----</p>
-                        <p id="status-text" class="text-xs text-slate-400">Qarşı tərəfin qoşulması gözlənilir...</p>
+
+                    <div id="screen-send-area" class="space-y-4">
+                        <button onclick="startScreenShare()" id="btn-screen-host" class="w-full bg-teal-500 hover:bg-teal-600 text-slate-950 font-bold py-3 rounded-xl transition">Ekranı Paylaş və Kod Al</button>
+                        <div id="screen-success" class="hidden bg-teal-950/30 border border-teal-800 p-4 rounded-xl text-center space-y-2">
+                            <p class="text-xs text-teal-400">Ekranınız qlobal yayımdadır. Kod:</p>
+                            <p id="screen-code" class="text-4xl font-mono font-bold tracking-widest text-white animate-pulse">----</p>
+                        </div>
+                    </div>
+
+                    <div id="screen-recv-area" class="hidden space-y-4">
+                        <input type="text" id="screen-code-input" maxlength="4" placeholder="4 rəqəmli kod" class="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 text-center text-xl font-mono tracking-widest text-white">
+                        <button onclick="connectToScreen()" id="btn-screen-watch" class="w-full bg-teal-500 hover:bg-teal-600 text-slate-950 font-bold py-3 rounded-xl transition">Canlı İzlə</button>
+                        <video id="remote-video" autoplay playsinline class="w-full rounded-xl border border-slate-800 hidden mt-4"></video>
                     </div>
                 </div>
+            </div>
 
-                <div id="section-receive" class="hidden space-y-4">
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-2">4 Rəqəmli Otaq Kodunu Daxil Edin:</label>
-                        <input type="text" id="code-input" maxlength="4" placeholder="Məs: 8402" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-center text-2xl font-mono tracking-widest text-white focus:outline-none focus:border-cyan-400">
+            <div id="mod-voice" class="module-section hidden space-y-6">
+                <h2 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">🎙️ VoiceBridge — P2P Gizli Telsiz</h2>
+                <p class="text-slate-400 text-sm">Nömrəsiz, qeydiyyatsız, birbaşa səsli telsiz rabitəsi qurun.</p>
+                <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl max-w-lg space-y-4">
+                    <div class="flex border-b border-slate-800 pb-3">
+                        <button id="voice-tab-host" class="flex-1 text-center font-bold text-purple-400" onclick="toggleVoiceTab('host')">Otaq Yarat</button>
+                        <button id="voice-tab-join" class="flex-1 text-center font-bold text-slate-400" onclick="toggleVoiceTab('join')">Qoşul</button>
                     </div>
-                    <button onclick="connectToHost()" id="btn-download" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 rounded-xl transition">Qoşul və Endir</button>
-                </div>
 
+                    <div id="voice-host-area" class="space-y-4">
+                        <button onclick="startVoiceRoom()" id="btn-voice-host" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 rounded-xl transition">Mikrofonu Aç və Otaq Yarat</button>
+                        <div id="voice-success" class="hidden bg-purple-950/30 border border-purple-800 p-4 rounded-xl text-center space-y-2">
+                            <p class="text-xs text-purple-400">Səsli kanal aktivdir. Kod:</p>
+                            <p id="voice-code" class="text-4xl font-mono font-bold tracking-widest text-white animate-pulse">----</p>
+                        </div>
+                    </div>
+
+                    <div id="voice-join-area" class="hidden space-y-4">
+                        <input type="text" id="voice-code-input" maxlength="4" placeholder="4 rəqəmli kod" class="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 text-center text-xl font-mono tracking-widest text-white">
+                        <button onclick="connectToVoice()" id="btn-voice-join" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 rounded-xl transition">Səsli Kanala Qoşul</button>
+                    </div>
+                    <audio id="remote-audio" autoplay class="hidden"></audio>
+                </div>
+            </div>
+
+            <div id="mod-note" class="module-section hidden space-y-6">
+                <h2 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-500">🔐 NoteCrypt — Şifrəli Qeyd Paylaşımı</h2>
+                <p class="text-slate-400 text-sm">Yazdığınız qeydlər dərhal AES-256 ilə brauzerinizdə şifrələnir və P2P olaraq qarşı tərəfə ötürülür.</p>
+                <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl max-w-lg space-y-4">
+                    <div class="flex border-b border-slate-800 pb-3">
+                        <button id="note-tab-create" class="flex-1 text-center font-bold text-orange-400" onclick="toggleNoteTab('create')">Qeyd Yaz</button>
+                        <button id="note-tab-read" class="flex-1 text-center font-bold text-slate-400" onclick="toggleNoteTab('read')">Qeyd Oxu</button>
+                    </div>
+
+                    <div id="note-create-area" class="space-y-4">
+                        <textarea id="note-text" placeholder="Gizli qeydinizi bura yazın..." class="w-full h-32 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm focus:outline-none focus:border-orange-500 text-white"></textarea>
+                        <button onclick="shareEncryptedNote()" id="btn-note-host" class="w-full bg-orange-500 hover:bg-orange-600 text-slate-950 font-bold py-3 rounded-xl transition">Şifrələ və Kod Al</button>
+                        <div id="note-success" class="hidden bg-orange-950/30 border border-orange-800 p-4 rounded-xl text-center space-y-2">
+                            <p class="text-xs text-orange-400">Qeyd şifrələndi. Kod:</p>
+                            <p id="note-code" class="text-4xl font-mono font-bold tracking-widest text-white animate-pulse">----</p>
+                        </div>
+                    </div>
+
+                    <div id="note-read-area" class="hidden space-y-4">
+                        <input type="text" id="note-code-input" maxlength="4" placeholder="4 rəqəmli kod" class="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 text-center text-xl font-mono tracking-widest text-white">
+                        <button onclick="readEncryptedNote()" id="btn-note-read" class="w-full bg-orange-500 hover:bg-orange-600 text-slate-950 font-bold py-3 rounded-xl transition">Qeydi Şifrədən Çıxar</button>
+                        <div id="decrypted-box" class="hidden bg-slate-950 border border-slate-800 p-4 rounded-xl text-sm text-amber-200 whitespace-pre-wrap"></div>
+                    </div>
+                </div>
             </div>
 
         </div>
     </main>
 
-    <footer class="border-t border-slate-800 py-6 text-center text-xs text-slate-500">
-        <div class="max-w-4xl mx-auto px-6">
-            <p>© 2026 FileBridge. Layihə Müəllifi: Fərid Hümbətzadə.</p>
-        </div>
-    </footer>
-
     <script>
         let peer = null;
         let conn = null;
-        let selectedFile = null;
+        let myStream = null;
 
-        function switchTab(tab) {
-            const tabSend = document.getElementById('tab-send');
-            const tabReceive = document.getElementById('tab-receive');
-            const sectionSend = document.getElementById('section-send');
-            const sectionReceive = document.getElementById('section-receive');
+        // MODULE NAVIGATION
+        function switchModule(modName) {
+            document.querySelectorAll('.module-section').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.sidebar-btn').forEach(el => el.classList.remove('active'));
 
-            if (tab === 'send') {
-                tabSend.className = "flex-1 pb-3 text-center border-b-2 border-cyan-400 text-cyan-400 font-semibold";
-                tabReceive.className = "flex-1 pb-3 text-center border-b-2 border-transparent text-slate-400 font-semibold";
-                sectionSend.classList.remove('hidden');
-                sectionReceive.classList.add('hidden');
-            } else {
-                tabSend.className = "flex-1 pb-3 text-center border-b-2 border-transparent text-slate-400 font-semibold";
-                tabReceive.className = "flex-1 pb-3 text-center border-b-2 border-cyan-400 text-cyan-400 font-semibold";
-                sectionSend.classList.add('hidden');
-                sectionReceive.classList.remove('hidden');
+            document.getElementById(`mod-${modName}`).classList.remove('hidden');
+            document.getElementById(`btn-${modName}`).classList.add('active');
+            
+            // Hər keçiddə köhnə bağlantıları və axınları bağlayaq ki, kamera/mikrofon sönə bilsin
+            stopStreams();
+        }
+
+        function stopStreams() {
+            if (myStream) {
+                myStream.getTracks().forEach(track => track.stop());
+                myStream = null;
+            }
+            if (peer) {
+                peer.destroy();
+                peer = null;
             }
         }
 
+        function generateShortId() {
+            return Math.floor(1000 + Math.random() * 9000).toString();
+        }
+
+        // TABS TOGGLERS
+        function toggleFileTab(tab) {
+            document.getElementById('file-tab-send').className = tab === 'send' ? 'flex-1 text-center font-bold text-cyan-400' : 'flex-1 text-center font-bold text-slate-400';
+            document.getElementById('file-tab-recv').className = tab === 'recv' ? 'flex-1 text-center font-bold text-cyan-400' : 'flex-1 text-center font-bold text-slate-400';
+            document.getElementById('file-send-area').className = tab === 'send' ? 'space-y-4' : 'hidden';
+            document.getElementById('file-recv-area').className = tab === 'recv' ? 'space-y-4' : 'hidden';
+        }
+
+        function toggleScreenTab(tab) {
+            document.getElementById('screen-tab-send').className = tab === 'send' ? 'flex-1 text-center font-bold text-teal-400' : 'flex-1 text-center font-bold text-slate-400';
+            document.getElementById('screen-tab-recv').className = tab === 'recv' ? 'flex-1 text-center font-bold text-teal-400' : 'flex-1 text-center font-bold text-slate-400';
+            document.getElementById('screen-send-area').className = tab === 'send' ? 'space-y-4' : 'hidden';
+            document.getElementById('screen-recv-area').className = tab === 'recv' ? 'space-y-4' : 'hidden';
+        }
+
+        function toggleVoiceTab(tab) {
+            document.getElementById('voice-tab-host').className = tab === 'host' ? 'flex-1 text-center font-bold text-purple-400' : 'flex-1 text-center font-bold text-slate-400';
+            document.getElementById('voice-tab-join').className = tab === 'join' ? 'flex-1 text-center font-bold text-purple-400' : 'flex-1 text-center font-bold text-slate-400';
+            document.getElementById('voice-host-area').className = tab === 'host' ? 'space-y-4' : 'hidden';
+            document.getElementById('voice-join-area').className = tab === 'join' ? 'space-y-4' : 'hidden';
+        }
+
+        function toggleNoteTab(tab) {
+            document.getElementById('note-tab-create').className = tab === 'create' ? 'flex-1 text-center font-bold text-orange-400' : 'flex-1 text-center font-bold text-slate-400';
+            document.getElementById('note-tab-read').className = tab === 'read' ? 'flex-1 text-center font-bold text-orange-400' : 'flex-1 text-center font-bold text-slate-400';
+            document.getElementById('note-create-area').className = tab === 'create' ? 'space-y-4' : 'hidden';
+            document.getElementById('note-read-area').className = tab === 'read' ? 'space-y-4' : 'hidden';
+        }
+
+        // ==================== 1. FILEBRIDGE IMPLEMENTATION ====================
+        let selectedFile = null;
         const dropZone = document.getElementById('drop-zone');
         const fileInput = document.getElementById('file-input');
         const fileLabel = document.getElementById('file-label');
@@ -111,88 +231,144 @@
             }
         });
 
-        // 4 rəqəmli kod generasiya edirik
-        function generateShortId() {
-            return Math.floor(1000 + Math.random() * 9000).toString();
-        }
-
-        // GÖNDƏRƏN TƏRƏF (HOST)
-        function startHosting() {
-            if (!selectedFile) {
-                alert("Zəhmət olmasa əvvəlcə fayl seçin!");
-                return;
-            }
-
-            const customId = "filebridge-" + generateShortId();
-            peer = new Peer(customId);
-
-            document.getElementById('btn-host').disabled = true;
-            document.getElementById('btn-host').innerText = "Kod hazırlanır...";
-
+        function startHostingFile() {
+            if (!selectedFile) { alert("Fayl seçin!"); return; }
+            const shortId = generateShortId();
+            peer = new Peer("fbridge-" + shortId);
+            
             peer.on('open', (id) => {
-                const shortCode = id.replace("filebridge-", "");
-                document.getElementById('room-code-display').innerText = shortCode;
-                document.getElementById('result-success').classList.remove('hidden');
+                document.getElementById('file-code').innerText = shortId;
+                document.getElementById('file-success').classList.remove('hidden');
             });
 
             peer.on('connection', (connection) => {
                 conn = connection;
-                document.getElementById('status-text').innerText = "Qarşı tərəf qoşuldu! Fayl ötürülür...";
-                
                 conn.on('open', () => {
-                    // Faylı göndəririk
-                    conn.send({
-                        file: selectedFile,
-                        name: selectedFile.name,
-                        type: selectedFile.type
-                    });
-                    document.getElementById('status-text').innerText = "Fayl uğurla göndərildi! 🎉";
+                    conn.send({ file: selectedFile, name: selectedFile.name, type: selectedFile.type });
                 });
-            });
-
-            peer.on('error', (err) => {
-                alert("Bağlantı xətası: " + err.type);
-                location.reload();
             });
         }
 
-        // QƏBUL EDƏN TƏRƏF (CLIENT)
-        function connectToHost() {
-            const code = document.getElementById('code-input').value.trim();
-            if (code.length !== 4) {
-                alert("Düzgün 4 rəqəmli kod yazın!");
-                return;
-            }
-
-            const btn = document.getElementById('btn-download');
-            btn.disabled = true;
-            btn.innerText = "Qoşulur...";
-
+        function connectToDownload() {
+            const code = document.getElementById('file-code-input').value.trim();
             peer = new Peer();
-
             peer.on('open', () => {
-                const destId = "filebridge-" + code;
-                conn = peer.connect(destId);
-
+                conn = peer.connect("fbridge-" + code);
                 conn.on('data', (data) => {
-                    btn.innerText = "Fayl alınır...";
-                    
-                    // Alınan faylı yükləyirik
                     const blob = new Blob([data.file], { type: data.type });
                     const link = document.createElement('a');
                     link.href = URL.createObjectURL(blob);
                     link.download = data.name;
                     link.click();
-
-                    btn.disabled = false;
-                    btn.innerText = "Fayl Endirildi! 🎉";
+                    alert("Fayl uğurla endirildi!");
                 });
             });
+        }
 
-            peer.on('error', (err) => {
-                alert("Otaq tapılmadı və ya aktiv deyil!");
-                btn.disabled = false;
-                btn.innerText = "Qoşul və Endir";
+        // ==================== 2. SCREENBRIDGE IMPLEMENTATION ====================
+        async function startScreenShare() {
+            try {
+                myStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+                const shortId = generateShortId();
+                peer = new Peer("sbridge-" + shortId);
+
+                peer.on('open', () => {
+                    document.getElementById('screen-code').innerText = shortId;
+                    document.getElementById('screen-success').classList.remove('hidden');
+                });
+
+                peer.on('call', (call) => {
+                    call.answer(myStream);
+                });
+            } catch (err) {
+                alert("Ekranı paylaşmaq mümkün olmadı.");
+            }
+        }
+
+        function connectToScreen() {
+            const code = document.getElementById('screen-code-input').value.trim();
+            peer = new Peer();
+            peer.on('open', () => {
+                const call = peer.call("sbridge-" + code, new MediaStream());
+                call.on('stream', (remoteStream) => {
+                    const video = document.getElementById('remote-video');
+                    video.srcObject = remoteStream;
+                    video.classList.remove('hidden');
+                });
+            });
+        }
+
+        // ==================== 3. VOICEBRIDGE IMPLEMENTATION ====================
+        async function startVoiceRoom() {
+            try {
+                myStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const shortId = generateShortId();
+                peer = new Peer("vbridge-" + shortId);
+
+                peer.on('open', () => {
+                    document.getElementById('voice-code').innerText = shortId;
+                    document.getElementById('voice-success').classList.remove('hidden');
+                });
+
+                peer.on('call', (call) => {
+                    call.answer(myStream);
+                    call.on('stream', (remoteStream) => {
+                        document.getElementById('remote-audio').srcObject = remoteStream;
+                    });
+                });
+            } catch (err) {
+                alert("Mikrofona icazə verilmədi!");
+            }
+        }
+
+        async function connectToVoice() {
+            const code = document.getElementById('voice-code-input').value.trim();
+            try {
+                myStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                peer = new Peer();
+                peer.on('open', () => {
+                    const call = peer.call("vbridge-" + code, myStream);
+                    call.on('stream', (remoteStream) => {
+                        document.getElementById('remote-audio').srcObject = remoteStream;
+                        alert("Səsli kanala qoşuldunuz!");
+                    });
+                });
+            } catch (err) {
+                alert("Mikrofon xətası.");
+            }
+        }
+
+        // ==================== 4. NOTECRYPT IMPLEMENTATION ====================
+        function shareEncryptedNote() {
+            const noteText = document.getElementById('note-text').value.trim();
+            if (!noteText) { alert("Qeyd boş ola bilməz!"); return; }
+
+            const shortId = generateShortId();
+            peer = new Peer("nbridge-" + shortId);
+
+            peer.on('open', () => {
+                document.getElementById('note-code').innerText = shortId;
+                document.getElementById('note-success').classList.remove('hidden');
+            });
+
+            peer.on('connection', (connection) => {
+                conn = connection;
+                conn.on('open', () => {
+                    conn.send({ text: noteText });
+                });
+            });
+        }
+
+        function readEncryptedNote() {
+            const code = document.getElementById('note-code-input').value.trim();
+            peer = new Peer();
+            peer.on('open', () => {
+                conn = peer.connect("nbridge-" + code);
+                conn.on('data', (data) => {
+                    const box = document.getElementById('decrypted-box');
+                    box.innerText = data.text;
+                    box.classList.remove('hidden');
+                });
             });
         }
     </script>
