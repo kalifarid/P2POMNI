@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BridgeSuite Ultimate — Universal P2P Platforması</title>
+    <title>BridgeSuite Premium — Universal Multi-P2P Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <style>
@@ -14,6 +14,11 @@
             border-left: 4px solid #22d3ee;
         }
         canvas { touch-action: none; }
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
     </style>
 </head>
 <body class="text-slate-100 min-h-screen flex flex-col md:flex-row font-sans">
@@ -22,12 +27,15 @@
         <div>
             <div class="mb-6">
                 <h1 class="text-2xl font-black tracking-wider text-cyan-400">🌐 BridgeSuite</h1>
-                <p class="text-xs text-slate-500 font-mono">v4.0.0 (Ultimate Edition)</p>
+                <p class="text-xs text-slate-500 font-mono">v5.0.0 (Full Mesh Edition)</p>
             </div>
             
             <nav class="space-y-1.5 text-sm">
                 <button onclick="switchModule('file')" id="btn-file" class="sidebar-btn active w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left text-slate-400 hover:bg-slate-800 hover:text-white transition">
                     <span>📁</span> <span>FileBridge (Fayl)</span>
+                </button>
+                <button onclick="switchModule('cam')" id="btn-cam" class="sidebar-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                    <span>📹</span> <span>CamBridge (Görüntülü)</span>
                 </button>
                 <button onclick="switchModule('screen')" id="btn-screen" class="sidebar-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left text-slate-400 hover:bg-slate-800 hover:text-white transition">
                     <span>📺</span> <span>ScreenBridge (Ekran)</span>
@@ -39,7 +47,7 @@
                     <span>🔐</span> <span>NoteCrypt (Qeyd)</span>
                 </button>
                 <button onclick="switchModule('chat')" id="btn-chat" class="sidebar-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left text-slate-400 hover:bg-slate-800 hover:text-white transition">
-                    <span>💬</span> <span>ChatBridge (Çat)</span>
+                    <span>💬</span> <span>ChatBridge (Mesh Çat)</span>
                 </button>
                 <button onclick="switchModule('board')" id="btn-board" class="sidebar-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left text-slate-400 hover:bg-slate-800 hover:text-white transition">
                     <span>🎨</span> <span>BoardBridge (Lövhə)</span>
@@ -52,7 +60,7 @@
 
         <div class="mt-6 pt-4 border-t border-slate-800 text-xs text-slate-500">
             <p>Müəllif: Fərid Hümbətzadə</p>
-            <p class="text-cyan-600 font-bold">WebRTC P2P Grid Active</p>
+            <p class="text-cyan-600 font-bold">Mesh Grid Engine Active</p>
         </div>
     </aside>
 
@@ -81,6 +89,20 @@
                         <input type="text" id="file-code-input" maxlength="4" placeholder="4 rəqəmli kod" class="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 text-center text-xl font-mono tracking-widest text-white">
                         <button onclick="connectToDownload()" id="btn-file-dl" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 rounded-xl transition">Qoşul və Endir</button>
                     </div>
+                </div>
+            </div>
+
+            <div id="mod-cam" class="module-section hidden space-y-4">
+                <h2 class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-teal-500">📹 CamBridge — Çoxistifadəçili P2P Görüntülü Otaq</h2>
+                <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl space-y-4">
+                    <div class="flex flex-wrap gap-2 items-center">
+                        <button onclick="createCamRoom()" class="bg-teal-500 text-slate-950 px-4 py-2 rounded-xl font-bold text-xs transition">Otaq Yarat</button>
+                        <input type="text" id="cam-code-input" placeholder="Otaq Kodu" class="w-24 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-center text-xs text-white">
+                        <button onclick="joinCamRoom()" class="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-xl font-bold text-xs transition">Qoşul</button>
+                        <p id="cam-code-display" class="text-xs text-teal-400 font-mono hidden ml-auto">Otaq Kodu: <span class="text-white font-bold tracking-wider"></span></p>
+                    </div>
+                    <div id="video-grid" class="video-grid min-h-[200px] bg-slate-950 p-4 rounded-xl border border-slate-800">
+                        </div>
                 </div>
             </div>
 
@@ -152,7 +174,7 @@
             </div>
 
             <div id="mod-chat" class="module-section hidden space-y-4">
-                <h2 class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-rose-500">💬 ChatBridge — Mərkəzsiz P2P Çat</h2>
+                <h2 class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-rose-500">💬 ChatBridge — Multi-User Mesh Çat</h2>
                 <div class="bg-slate-900/50 border border-slate-800 p-4 rounded-2xl max-w-lg space-y-4 flex flex-col h-[400px]">
                     <div id="chat-auth" class="space-y-4 my-auto">
                         <div class="flex space-x-2">
@@ -174,7 +196,7 @@
             </div>
 
             <div id="mod-board" class="module-section hidden space-y-4">
-                <h2 class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">🎨 BoardBridge — Real-time Ortaq Lövhə</h2>
+                <h2 class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">🎨 BoardBridge — Multi-User Ortaq Lövhə</h2>
                 <div class="bg-slate-900/50 border border-slate-800 p-4 rounded-2xl space-y-4">
                     <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
                         <div class="flex space-x-2">
@@ -213,8 +235,9 @@
 
     <script>
         let peer = null;
-        let conn = null;
+        let connections = []; // Mesh network üçün bütün bağlantıların siyahısı
         let myStream = null;
+        let peerPrefix = ""; 
 
         // MODULE NAVIGATION
         function switchModule(modName) {
@@ -232,6 +255,8 @@
                 myStream.getTracks().forEach(track => track.stop());
                 myStream = null;
             }
+            connections.forEach(conn => conn.close());
+            connections = [];
             if (peer) {
                 peer.destroy();
                 peer = null;
@@ -239,6 +264,7 @@
             if (gameInterval) {
                 clearInterval(gameInterval);
             }
+            document.getElementById('video-grid').innerHTML = '';
         }
 
         function generateShortId() {
@@ -297,9 +323,9 @@
                 document.getElementById('file-success').classList.remove('hidden');
             });
             peer.on('connection', (connection) => {
-                conn = connection;
-                conn.on('open', () => {
-                    conn.send({ file: selectedFile, name: selectedFile.name, type: selectedFile.type });
+                connections.push(connection);
+                connection.on('open', () => {
+                    connection.send({ file: selectedFile, name: selectedFile.name, type: selectedFile.type });
                 });
             });
         }
@@ -308,7 +334,7 @@
             const code = document.getElementById('file-code-input').value.trim();
             peer = new Peer();
             peer.on('open', () => {
-                conn = peer.connect("fbridge-" + code);
+                const conn = peer.connect("fbridge-" + code);
                 conn.on('data', (data) => {
                     const blob = new Blob([data.file], { type: data.type });
                     const link = document.createElement('a');
@@ -318,6 +344,109 @@
                     alert("Fayl uğurla endirildi!");
                 });
             });
+        }
+
+        // ==================== CAMBRIDGE (MULTIPLE PEER VIDEO CHAT) ====================
+        let myId = "";
+        let peersInRoom = [];
+
+        async function createCamRoom() {
+            const shortId = generateShortId();
+            setupCamPeer(shortId, true);
+        }
+
+        async function joinCamRoom() {
+            const code = document.getElementById('cam-code-input').value.trim();
+            setupCamPeer(code, false);
+        }
+
+        async function setupCamPeer(roomCode, isHost) {
+            try {
+                myStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                addVideoFeed(myStream, "Sən (Kamera)", true);
+
+                myId = isHost ? "cam-" + roomCode : "cam-" + roomCode + "-" + generateShortId();
+                peer = new Peer(myId);
+
+                peer.on('open', (id) => {
+                    const display = document.getElementById('cam-code-display');
+                    display.querySelector('span').innerText = roomCode;
+                    display.classList.remove('hidden');
+
+                    if (!isHost) {
+                        // Host-a qoşulur və özünü təqdim edir
+                        const hostConn = peer.connect("cam-" + roomCode);
+                        hostConn.on('open', () => {
+                            hostConn.send({ type: 'join', peerId: myId });
+                        });
+                    }
+                });
+
+                peer.on('connection', (connection) => {
+                    connection.on('data', (data) => {
+                        if (data.type === 'join') {
+                            // Yeni qoşulana zəng edirik
+                            const call = peer.call(data.peerId, myStream);
+                            call.on('stream', (userStream) => {
+                                addVideoFeed(userStream, "İstifadəçi");
+                            });
+
+                            // Host yeni gələnin idsini otaqdakı hər kəsə yayır (Mesh Grid)
+                            if (isHost) {
+                                peersInRoom.push(data.peerId);
+                                connections.forEach(c => {
+                                    c.send({ type: 'new-peer', peerId: data.peerId });
+                                });
+                            }
+                        }
+                        if (data.type === 'new-peer') {
+                            // Yeni gələn mesh peer-ə qoşuluruq
+                            const call = peer.call(data.peerId, myStream);
+                            call.on('stream', (userStream) => {
+                                addVideoFeed(userStream, "İstifadəçi");
+                            });
+                        }
+                    });
+                    connections.push(connection);
+                });
+
+                peer.on('call', (call) => {
+                    call.answer(myStream);
+                    call.on('stream', (remoteStream) => {
+                        addVideoFeed(remoteStream, "İstifadəçi");
+                    });
+                });
+
+            } catch (err) {
+                alert("Kamera və mikrofona icazə verilmədi!");
+                console.error(err);
+            }
+        }
+
+        function addVideoFeed(stream, labelText, isMuted = false) {
+            const grid = document.getElementById('video-grid');
+            
+            // Əgər video artıq mövcuddursa, təkrar yaratmayaq
+            const existing = Array.from(grid.querySelectorAll('video')).find(v => v.srcObject && v.srcObject.id === stream.id);
+            if (existing) return;
+
+            const container = document.createElement('div');
+            container.className = "relative bg-slate-900 rounded-xl overflow-hidden border border-slate-800";
+
+            const video = document.createElement('video');
+            video.srcObject = stream;
+            video.autoplay = true;
+            video.playsInline = true;
+            if (isMuted) video.muted = true;
+            video.className = "w-full h-full object-cover rounded-xl aspect-video";
+
+            const badge = document.createElement('span');
+            badge.className = "absolute bottom-2 left-2 bg-slate-950/80 text-xxs px-2 py-1 rounded text-cyan-400 font-bold";
+            badge.innerText = labelText;
+
+            container.appendChild(video);
+            container.appendChild(badge);
+            grid.appendChild(container);
         }
 
         // ==================== 2. SCREENBRIDGE ====================
@@ -392,8 +521,8 @@
                 document.getElementById('note-success').classList.remove('hidden');
             });
             peer.on('connection', (connection) => {
-                conn = connection;
-                conn.on('open', () => { conn.send({ text: noteText }); });
+                connections.push(connection);
+                connection.on('open', () => { connection.send({ text: noteText }); });
             });
         }
 
@@ -401,7 +530,7 @@
             const code = document.getElementById('note-code-input').value.trim();
             peer = new Peer();
             peer.on('open', () => {
-                conn = peer.connect("nbridge-" + code);
+                const conn = peer.connect("nbridge-" + code);
                 conn.on('data', (data) => {
                     const box = document.getElementById('decrypted-box');
                     box.innerText = data.text;
@@ -410,43 +539,85 @@
             });
         }
 
-        // ==================== 5. CHATBRIDGE ====================
+        // ==================== 5. CHATBRIDGE (MESH MULTI-USER CHAT) ====================
         function startChat() {
             const shortId = generateShortId();
-            peer = new Peer("cbridge-" + shortId);
-            peer.on('open', () => {
-                const display = document.getElementById('chat-my-code');
-                display.querySelector('span').innerText = shortId;
-                display.classList.remove('hidden');
-            });
-            peer.on('connection', (connection) => {
-                conn = connection;
-                setupChatConnection();
-            });
+            setupChatPeer(shortId, true);
         }
 
         function joinChat() {
             const code = document.getElementById('chat-code-input').value.trim();
-            peer = new Peer();
+            setupChatPeer(code, false);
+        }
+
+        function setupChatPeer(roomCode, isHost) {
+            myId = isHost ? "chat-" + roomCode : "chat-" + roomCode + "-" + generateShortId();
+            peer = new Peer(myId);
+
             peer.on('open', () => {
-                conn = peer.connect("cbridge-" + code);
-                setupChatConnection();
+                document.getElementById('chat-auth').classList.add('hidden');
+                document.getElementById('chat-box').classList.remove('hidden');
+                
+                const display = document.getElementById('chat-my-code');
+                display.querySelector('span').innerText = roomCode;
+                display.classList.remove('hidden');
+
+                if (!isHost) {
+                    const hostConn = peer.connect("chat-" + roomCode);
+                    hostConn.on('open', () => {
+                        hostConn.send({ type: 'join', peerId: myId });
+                    });
+                    connections.push(hostConn);
+                    setupChatEvents(hostConn);
+                }
+            });
+
+            peer.on('connection', (connection) => {
+                connections.push(connection);
+                setupChatEvents(connection, isHost);
             });
         }
 
-        function setupChatConnection() {
-            document.getElementById('chat-auth').classList.add('hidden');
-            document.getElementById('chat-box').classList.remove('hidden');
-            conn.on('data', (data) => {
-                if (data.chat) appendChatMessage(data.chat, 'partner');
+        function setupChatEvents(connection, isHost) {
+            connection.on('data', (data) => {
+                if (data.type === 'join' && isHost) {
+                    // Host bütün digər qoşulmuş insanlara yeni peer-i xəbər verir
+                    connections.forEach(c => {
+                        if (c.peer !== data.peerId) {
+                            c.send({ type: 'new-peer', peerId: data.peerId });
+                        }
+                    });
+                    // Yeni qoşulan üçün data kanalı açılır
+                    const newConn = peer.connect(data.peerId);
+                    connections.push(newConn);
+                    setupChatEvents(newConn, false);
+                }
+                if (data.type === 'new-peer') {
+                    const newConn = peer.connect(data.peerId);
+                    connections.push(newConn);
+                    setupChatEvents(newConn, false);
+                }
+                if (data.chat) {
+                    appendChatMessage(data.chat, 'partner');
+                    // Host-dursa mesajı hamıya yayır
+                    if (isHost) {
+                        connections.forEach(c => {
+                            if (c.peer !== connection.peer) c.send({ chat: data.chat });
+                        });
+                    }
+                }
             });
         }
 
         function sendChatMessage() {
             const input = document.getElementById('chat-input');
             const val = input.value.trim();
-            if (!val || !conn) return;
-            conn.send({ chat: val });
+            if (!val) return;
+            
+            connections.forEach(c => {
+                if (c.open) c.send({ chat: val });
+            });
+
             appendChatMessage(val, 'me');
             input.value = '';
         }
@@ -463,7 +634,7 @@
             box.scrollTop = box.scrollHeight;
         }
 
-        // ==================== 6. BOARDBRIDGE ====================
+        // ==================== 6. BOARDBRIDGE (MULTI-USER BOARD) ====================
         const canvas = document.getElementById('whiteboard');
         const ctx = canvas.getContext('2d');
         let drawing = false;
@@ -479,31 +650,70 @@
 
         function startBoard() {
             const shortId = generateShortId();
-            peer = new Peer("bbridge-" + shortId);
-            peer.on('open', () => {
-                const d = document.getElementById('board-code-display');
-                d.querySelector('span').innerText = shortId;
-                d.classList.remove('hidden');
-            });
-            peer.on('connection', (connection) => {
-                conn = connection;
-                setupBoardConnection();
-            });
+            setupBoardPeer(shortId, true);
         }
 
         function joinBoard() {
             const code = document.getElementById('board-code-input').value.trim();
-            peer = new Peer();
+            setupBoardPeer(code, false);
+        }
+
+        function setupBoardPeer(roomCode, isHost) {
+            myId = isHost ? "board-" + roomCode : "board-" + roomCode + "-" + generateShortId();
+            peer = new Peer(myId);
+
             peer.on('open', () => {
-                conn = peer.connect("bbridge-" + code);
-                setupBoardConnection();
+                const d = document.getElementById('board-code-display');
+                d.querySelector('span').innerText = roomCode;
+                d.classList.remove('hidden');
+
+                if (!isHost) {
+                    const hostConn = peer.connect("board-" + roomCode);
+                    hostConn.on('open', () => {
+                        hostConn.send({ type: 'join', peerId: myId });
+                    });
+                    connections.push(hostConn);
+                    setupBoardEvents(hostConn);
+                }
+            });
+
+            peer.on('connection', (connection) => {
+                connections.push(connection);
+                setupBoardEvents(connection, isHost);
             });
         }
 
-        function setupBoardConnection() {
-            conn.on('data', (data) => {
-                if (data.draw) drawLine(data.draw.x0, data.draw.y0, data.draw.x1, data.draw.y1, data.draw.color, false);
-                if (data.clear) ctx.clearRect(0, 0, canvas.width, canvas.height);
+        function setupBoardEvents(connection, isHost) {
+            connection.on('data', (data) => {
+                if (data.type === 'join' && isHost) {
+                    connections.forEach(c => {
+                        if (c.peer !== data.peerId) c.send({ type: 'new-peer', peerId: data.peerId });
+                    });
+                    const newConn = peer.connect(data.peerId);
+                    connections.push(newConn);
+                    setupBoardEvents(newConn, false);
+                }
+                if (data.type === 'new-peer') {
+                    const newConn = peer.connect(data.peerId);
+                    connections.push(newConn);
+                    setupBoardEvents(newConn, false);
+                }
+                if (data.draw) {
+                    drawLine(data.draw.x0, data.draw.y0, data.draw.x1, data.draw.y1, data.draw.color, false);
+                    if (isHost) {
+                        connections.forEach(c => {
+                            if (c.peer !== connection.peer) c.send({ draw: data.draw });
+                        });
+                    }
+                }
+                if (data.clear) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    if (isHost) {
+                        connections.forEach(c => {
+                            if (c.peer !== connection.peer) c.send({ clear: true });
+                        });
+                    }
+                }
             });
         }
 
@@ -517,7 +727,6 @@
             [lastX, lastY] = [e.offsetX, e.offsetY];
         });
 
-        // Touch event-ləri (Mobil üçün)
         canvas.addEventListener('touchstart', (e) => {
             drawing = true;
             const t = e.touches[0];
@@ -540,14 +749,18 @@
             ctx.moveTo(x0, y0);
             ctx.lineTo(x1, y1);
             ctx.stroke();
-            if (sync && conn) {
-                conn.send({ draw: { x0, y0, x1, y1, color } });
+            if (sync && connections.length > 0) {
+                connections.forEach(c => {
+                    if (c.open) c.send({ draw: { x0, y0, x1, y1, color } });
+                });
             }
         }
 
         function clearBoard() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            if (conn) conn.send({ clear: true });
+            connections.forEach(c => {
+                if (c.open) c.send({ clear: true });
+            });
         }
 
         // ==================== 7. GAMEBRIDGE ====================
@@ -557,19 +770,19 @@
         let localPlayer = { y: 130, score: 0 };
         let remotePlayer = { y: 130, score: 0 };
         let ball = { x: 300, y: 150, vx: 4, vy: 4 };
-        let isHost = false;
+        let isGameHost = false;
 
         function hostGame() {
             const shortId = generateShortId();
             peer = new Peer("gbridge-" + shortId);
-            isHost = true;
+            isGameHost = true;
             peer.on('open', () => {
                 const d = document.getElementById('game-code-display');
                 d.querySelector('span').innerText = shortId;
                 d.classList.remove('hidden');
             });
             peer.on('connection', (connection) => {
-                conn = connection;
+                connections.push(connection);
                 startGameLoop();
             });
         }
@@ -577,9 +790,10 @@
         function joinGame() {
             const code = document.getElementById('game-code-input').value.trim();
             peer = new Peer();
-            isHost = false;
+            isGameHost = false;
             peer.on('open', () => {
-                conn = peer.connect("gbridge-" + code);
+                const conn = peer.connect("gbridge-" + code);
+                connections.push(conn);
                 startGameLoop();
             });
         }
@@ -588,10 +802,12 @@
             gCanvas.classList.remove('hidden');
             document.getElementById('game-controls').classList.remove('hidden');
             
-            conn.on('data', (data) => {
-                if (data.y !== undefined) remotePlayer.y = data.y;
-                if (data.ball !== undefined) { ball = data.ball; }
-                if (data.score !== undefined) { localPlayer.score = data.score.r; remotePlayer.score = data.score.l; }
+            connections.forEach(conn => {
+                conn.on('data', (data) => {
+                    if (data.y !== undefined) remotePlayer.y = data.y;
+                    if (data.ball !== undefined) { ball = data.ball; }
+                    if (data.score !== undefined) { localPlayer.score = data.score.r; remotePlayer.score = data.score.l; }
+                });
             });
 
             window.addEventListener('keydown', (e) => {
@@ -599,34 +815,32 @@
                 if (e.key === 's' || e.key === 'S') { localPlayer.y = Math.min(240, localPlayer.y + 15); syncGame(); }
             });
 
-            gameInterval = setInterval(updateGame, 1000/60); // 60 FPS
+            gameInterval = setInterval(updateGame, 1000/60);
         }
 
         function syncGame() {
-            if (conn) conn.send({ y: localPlayer.y });
+            connections.forEach(c => {
+                if (c.open) c.send({ y: localPlayer.y });
+            });
         }
 
         function updateGame() {
-            if (isHost) {
+            if (isGameHost) {
                 ball.x += ball.vx;
                 ball.y += ball.vy;
 
-                // Divarlarla toqquşma
                 if (ball.y < 0 || ball.y > 290) ball.vy = -ball.vy;
 
-                // Raketlərlə toqquşma
                 if (ball.x < 20 && ball.y > localPlayer.y && ball.y < localPlayer.y + 60) { ball.vx = -ball.vx; }
                 if (ball.x > 570 && ball.y > remotePlayer.y && ball.y < remotePlayer.y + 60) { ball.vx = -ball.vx; }
 
-                // Xal qazanmaq
                 if (ball.x < 0) { remotePlayer.score++; resetBall(); }
                 if (ball.x > 600) { localPlayer.score++; resetBall(); }
 
-                if (conn) {
-                    conn.send({ ball: ball, score: { l: localPlayer.score, r: remotePlayer.score } });
-                }
+                connections.forEach(c => {
+                    if (c.open) c.send({ ball: ball, score: { l: localPlayer.score, r: remotePlayer.score } });
+                });
             }
-
             drawGame();
         }
 
@@ -639,28 +853,23 @@
             gCtx.fillStyle = '#000';
             gCtx.fillRect(0, 0, 600, 300);
 
-            // Orta xətt
             gCtx.strokeStyle = '#334155';
             gCtx.setLineDash([5, 15]);
             gCtx.beginPath(); gCtx.moveTo(300, 0); gCtx.lineTo(300, 300); gCtx.stroke();
 
-            // Sol oyunçu
             gCtx.fillStyle = '#22d3ee';
-            gCtx.fillRect(10, isHost ? localPlayer.y : remotePlayer.y, 10, 60);
+            gCtx.fillRect(10, isGameHost ? localPlayer.y : remotePlayer.y, 10, 60);
 
-            // Sağ oyunçu
             gCtx.fillStyle = '#818cf8';
-            gCtx.fillRect(580, isHost ? remotePlayer.y : localPlayer.y, 10, 60);
+            gCtx.fillRect(580, isGameHost ? remotePlayer.y : localPlayer.y, 10, 60);
 
-            // Top
             gCtx.fillStyle = '#f43f5e';
             gCtx.beginPath(); gCtx.arc(ball.x, ball.y, 6, 0, Math.PI*2); gCtx.fill();
 
-            // Hesab
             gCtx.fillStyle = '#fff';
             gCtx.font = '20px monospace';
-            gCtx.fillText(isHost ? localPlayer.score : remotePlayer.score, 250, 40);
-            gCtx.fillText(isHost ? remotePlayer.score : localPlayer.score, 330, 40);
+            gCtx.fillText(isGameHost ? localPlayer.score : remotePlayer.score, 250, 40);
+            gCtx.fillText(isGameHost ? remotePlayer.score : localPlayer.score, 330, 40);
         }
     </script>
 </body>
