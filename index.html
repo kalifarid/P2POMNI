@@ -1,1069 +1,604 @@
 <!DOCTYPE html>
-<html lang="az">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>P2POMNI — GLOBAL P2P BRIDGE</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
-<style>
-  body { background-color: #0b0f19; }
-  .sidebar-btn.active { background-color: #1e293b; color: #22d3ee; border-left: 4px solid #22d3ee; }
-  .flag-btn { filter: grayscale(60%); opacity: .6; transition: all .15s; cursor:pointer; }
-  .flag-btn:hover { opacity: 1; filter: grayscale(0%); }
-  .flag-btn.active-flag { opacity: 1; filter: grayscale(0%); box-shadow: 0 0 0 2px #22d3ee; border-radius: 6px; }
-  canvas { touch-action: none; }
-  .video-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
-  .rmode-btn.ring-2 { box-shadow: 0 0 0 2px #34d399; background-color:#064e3b; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2POMNI - GLOBAL P2P BRIDGE</title>
+    <!-- Tailwind CSS və FontAwesome İkonları -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- PeerJS Kitabxanası (P2P Bağlantı üçün) -->
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap');
+        .cyber-font { font-family: 'Rajdhani', sans-serif; }
+        .cyber-glow { text-shadow: 0 0 10px rgba(6, 182, 212, 0.7); }
+        .cyber-panel { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(6, 182, 212, 0.2); }
+        body { background: radial-gradient(circle at center, #0f172a 0%, #020617 100%); min-height: 100vh; overflow-x: hidden; }
+        video { transform: scaleX(-1); object-fit: cover; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #020617; }
+        ::-webkit-scrollbar-thumb { background: #06b6d4; border-radius: 3px; }
+    </style>
 </head>
-<body class="text-slate-100 min-h-screen flex flex-col md:flex-row font-sans">
+<body class="cyber-font text-slate-100 antialiased">
 
-<aside class="w-full md:w-64 bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 p-6 flex flex-col justify-between">
-  <div>
-    <div class="mb-4">
-      <h1 class="text-xl font-black tracking-wider text-cyan-400">🌐 P2POMNI</h1>
-      <p data-i18n="appTag" class="text-xs text-slate-500 font-mono">Global P2P Bridge</p>
-    </div>
-
-    <div class="flex gap-2 mb-6">
-      <span id="flag-en" onclick="setLang('en')" class="flag-btn text-xl">🇬🇧</span>
-      <span id="flag-ru" onclick="setLang('ru')" class="flag-btn text-xl">🇷🇺</span>
-      <span id="flag-az" onclick="setLang('az')" class="flag-btn text-xl">🇦🇿</span>
-      <span id="flag-tr" onclick="setLang('tr')" class="flag-btn text-xl">🇹🇷</span>
-      <span id="flag-zh" onclick="setLang('zh')" class="flag-btn text-xl">🇨🇳</span>
-    </div>
-
-    <nav class="space-y-1.5 text-sm">
-      <button onclick="switchModule('random')" id="btn-random" class="sidebar-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left text-slate-400 hover:bg-slate-800 hover:text-white transition">
-        <span>🌍</span> <span data-i18n="nav_random">Random Global Chat</span>
-      </button>
-      <button onclick="switchModule('file')" id="btn-file" class="sidebar-btn active w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left text-slate-400 hover:bg-slate-800 hover:text-white transition">
-        <span>📁</span> <span data-i18n="nav_file">FileBridge</span>
-      </button>
-      <button onclick="switchModule('cam')" id="btn-cam" class="sidebar-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left text-slate-400 hover:bg-slate-800 hover:text-white transition">
-        <span>📹</span> <span data-i18n="nav_cam">CamBridge</span>
-      </button>
-      <button onclick="switchModule('screen')" id="btn-screen" class="sidebar-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left text-slate-400 hover:bg-slate-800 hover:text-white transition">
-        <span>📺</span> <span data-i18n="nav_screen">ScreenBridge</span>
-      </button>
-      <button onclick="switchModule('voice')" id="btn-voice" class="sidebar-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left text-slate-400 hover:bg-slate-800 hover:text-white transition">
-        <span>🎙️</span> <span data-i18n="nav_voice">VoiceBridge</span>
-      </button>
-      <button onclick="switchModule('note')" id="btn-note" class="sidebar-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left text-slate-400 hover:bg-slate-800 hover:text-white transition">
-        <span>🔐</span> <span data-i18n="nav_note">NoteCrypt</span>
-      </button>
-      <button onclick="switchModule('chat')" id="btn-chat" class="sidebar-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left text-slate-400 hover:bg-slate-800 hover:text-white transition">
-        <span>💬</span> <span data-i18n="nav_chat">ChatBridge</span>
-      </button>
-      <button onclick="switchModule('board')" id="btn-board" class="sidebar-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left text-slate-400 hover:bg-slate-800 hover:text-white transition">
-        <span>🎨</span> <span data-i18n="nav_board">BoardBridge</span>
-      </button>
-      <button onclick="switchModule('game')" id="btn-game" class="sidebar-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left text-slate-400 hover:bg-slate-800 hover:text-white transition">
-        <span>👾</span> <span data-i18n="nav_game">GameBridge</span>
-      </button>
-    </nav>
-  </div>
-
-  <div class="mt-6 pt-4 border-t border-slate-800 text-xs text-slate-500">
-    <p data-i18n="footer_author">Müəllif: Fərid Hümbətzadə</p>
-    <p class="text-cyan-600 font-bold">Mesh Grid Engine Active</p>
-  </div>
-</aside>
-
-<main class="flex-grow p-4 md:p-8 flex flex-col justify-between">
-<div class="max-w-4xl w-full mx-auto my-auto">
-
-  <!-- RANDOM GLOBAL CHAT -->
-  <div id="mod-random" class="module-section space-y-4">
-    <h2 data-i18n="random_title" class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">🌍 Random Global Chat</h2>
-    <p data-i18n="random_desc" class="text-sm text-slate-400 max-w-lg"></p>
-    <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl max-w-lg space-y-4">
-
-      <div id="random-setup" class="space-y-4">
-        <div class="grid grid-cols-3 gap-2">
-          <button onclick="selectRandomMode('text')" id="rmode-text" class="rmode-btn ring-2 bg-slate-800 py-2 rounded-xl text-xs font-bold text-white" data-i18n="random_mode_text">Text</button>
-          <button onclick="selectRandomMode('voice')" id="rmode-voice" class="rmode-btn bg-slate-800 py-2 rounded-xl text-xs font-bold text-white" data-i18n="random_mode_voice">Voice</button>
-          <button onclick="selectRandomMode('video')" id="rmode-video" class="rmode-btn bg-slate-800 py-2 rounded-xl text-xs font-bold text-white" data-i18n="random_mode_video">Video</button>
+    <!-- TOP NAVIGATION & LANGUAGE CHANGER -->
+    <header class="w-full border-b border-cyan-500/20 bg-slate-950/80 backdrop-blur sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+            <div class="h-10 w-10 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-[0_0_15px_rgba(6,182,212,0.4)]">
+                <i class="fa-solid fa-circle-nodes text-xl text-white animate-pulse"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 cyber-glow">P2POMNI</h1>
+                <p class="text-xs text-cyan-400/70 uppercase tracking-widest hidden sm:block">Global P2P Bridge</p>
+            </div>
         </div>
-        <button onclick="startRandomSearch()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-3 rounded-xl transition" data-i18n="random_find_btn">Find Partner</button>
-      </div>
 
-      <div id="random-searching" class="hidden text-center space-y-3">
-        <p data-i18n="random_searching" class="text-emerald-400 animate-pulse font-mono"></p>
-        <button onclick="leaveRandom()" class="text-xs text-slate-500 underline" data-i18n="random_cancel">Cancel</button>
-      </div>
-
-      <div id="random-active" class="hidden space-y-3">
-        <div id="random-video-grid" class="video-grid hidden min-h-[150px] bg-slate-950 p-2 rounded-xl border border-slate-800"></div>
-        <audio id="random-remote-audio" autoplay class="hidden"></audio>
-        <div class="flex gap-2 justify-center">
-          <button onclick="toggleRandomMic()" id="btn-random-mic" class="hidden bg-slate-800 px-4 py-2 rounded-lg text-sm">🎤</button>
-          <button onclick="toggleRandomCam()" id="btn-random-cam" class="hidden bg-slate-800 px-4 py-2 rounded-lg text-sm">📷</button>
+        <!-- Dil Bayraqları -->
+        <div class="flex items-center space-x-2 bg-slate-900/90 border border-slate-700/50 p-1.5 rounded-xl">
+            <button onclick="changeLanguage('en')" class="lang-btn px-2.5 py-1 rounded-md text-sm transition font-bold border border-transparent hover:border-cyan-500/40" id="btn-en" title="English">🇺🇸 EN</button>
+            <button onclick="changeLanguage('az')" class="lang-btn px-2.5 py-1 rounded-md text-sm transition font-bold border border-transparent hover:border-cyan-500/40" id="btn-az" title="Azərbaycanca">🇦🇿 AZ</button>
+            <button onclick="changeLanguage('tr')" class="lang-btn px-2.5 py-1 rounded-md text-sm transition font-bold border border-transparent hover:border-cyan-500/40" id="btn-tr" title="Türkçe">🇹🇷 TR</button>
+            <button onclick="changeLanguage('ru')" class="lang-btn px-2.5 py-1 rounded-md text-sm transition font-bold border border-transparent hover:border-cyan-500/40" id="btn-ru" title="Русский">🇷🇺 RU</button>
+            <button onclick="changeLanguage('zh')" class="lang-btn px-2.5 py-1 rounded-md text-sm transition font-bold border border-transparent hover:border-cyan-500/40" id="btn-zh" title="中文">🇨🇳 ZH</button>
         </div>
-        <div id="random-chat-messages" class="h-40 overflow-y-auto bg-slate-950 border border-slate-800 rounded-xl p-2 text-sm space-y-1"></div>
-        <div class="flex gap-2">
-          <input id="random-chat-input" type="text" data-i18n-ph="chat_input_ph" onkeydown="if(event.key==='Enter')sendRandomMessage()" class="flex-grow bg-slate-950 border border-slate-800 rounded-xl px-3 text-sm text-white">
-          <button onclick="sendRandomMessage()" class="bg-emerald-600 px-4 rounded-xl text-sm font-bold text-white" data-i18n="chat_send">Send</button>
+    </header>
+
+    <!-- MAIN APP WRAPPER -->
+    <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+
+        <!-- LOBBY SCREEN (OTAQ YARATMA VƏ DAXİL OLMA) -->
+        <div id="lobby-screen" class="max-w-2xl mx-auto my-12 space-y-8 animate-fade-in">
+            <div class="text-center space-y-3">
+                <h2 id="lang-welcome" class="text-4xl font-bold tracking-tight text-white sm:text-5xl">Təhlükəsiz Qlobal P2P Şəbəkəsi</h2>
+                <p id="lang-subwelcome" class="text-lg text-slate-400">Heç bir server yaddaşı olmadan, birbaşa cihazlar arası şifrələnmiş video və səs otaqları.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Otaq Yarat panel -->
+                <div class="cyber-panel p-6 rounded-2xl flex flex-col justify-between space-y-4">
+                    <div>
+                        <div class="flex items-center space-x-2 text-cyan-400 font-bold text-lg mb-3">
+                            <i class="fa-solid fa-plus-circle"></i>
+                            <span id="lang-create-title">Yeni Otaq Yarat</span>
+                        </div>
+                        <label id="lang-label-limit" class="block text-sm text-slate-400 mb-2">Maksimum İştirakçı Sayı (Özünüzdən başqa):</label>
+                        <input type="number" id="room-limit-input" min="1" max="10" value="4" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-cyan-400 focus:outline-none focus:border-cyan-500 font-bold text-center">
+                    </div>
+                    <button onclick="createNewRoom()" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold py-3 px-4 rounded-xl transition shadow-lg shadow-cyan-500/20 active:scale-95">
+                        <span id="lang-btn-create">Otağı Başlat</span>
+                    </button>
+                </div>
+
+                <!-- Otağa Qoşul panel -->
+                <div class="cyber-panel p-6 rounded-2xl flex flex-col justify-between space-y-4">
+                    <div>
+                        <div class="flex items-center space-x-2 text-emerald-400 font-bold text-lg mb-3">
+                            <i class="fa-solid fa-right-to-bracket"></i>
+                            <span id="lang-join-title">Mövcud Otağa Qoşul</span>
+                        </div>
+                        <label id="lang-label-code" class="block text-sm text-slate-400 mb-2">Otaq Kodunu Daxil Edin:</label>
+                        <input type="text" id="room-id-input" placeholder="p2p-xxxx-xxxx" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-slate-200 focus:outline-none focus:border-cyan-500 tracking-wider text-center">
+                    </div>
+                    <button onclick="joinRoomDirect()" class="w-full bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-emerald-500/30 font-bold py-3 px-4 rounded-xl transition active:scale-95">
+                        <span id="lang-btn-join">Qoşul</span>
+                    </button>
+                </div>
+            </div>
         </div>
-        <div class="flex gap-2">
-          <button onclick="skipRandomPartner()" class="flex-1 bg-amber-600 py-2 rounded-xl text-xs font-bold text-white" data-i18n="random_skip">Next</button>
-          <button onclick="leaveRandom()" class="flex-1 bg-red-700 py-2 rounded-xl text-xs font-bold text-white" data-i18n="random_leave">Leave</button>
+
+        <!-- ACTIVE CHAT INTERFACE (OTAQ EKRAI) -->
+        <div id="room-screen" class="hidden space-y-6 animate-fade-in">
+            <!-- STATUS BAR -->
+            <div class="cyber-panel px-6 py-3 rounded-2xl flex flex-wrap justify-between items-center gap-4">
+                <div class="flex items-center space-x-4">
+                    <span class="flex h-3 w-3 relative">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                    </span>
+                    <div class="text-sm">
+                        <span id="lang-status-connected" class="text-slate-400">Otaq Kodu:</span>
+                        <span id="current-room-display" class="font-bold text-cyan-400 tracking-wider ml-1">---</span>
+                    </div>
+                </div>
+
+                <!-- Limit və İştirakçı Göstəricisi -->
+                <div class="flex items-center space-x-4">
+                    <div class="bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl text-xs">
+                        <span id="lang-slot-label" class="text-slate-400">İştirakçılar:</span>
+                        <span id="participant-count" class="font-bold text-white ml-1">1</span> / <span id="room-limit-display" class="font-bold text-cyan-400">--</span>
+                    </div>
+                    <button onclick="copyRoomLink()" class="bg-slate-800 hover:bg-cyan-600/20 text-cyan-400 px-4 py-1.5 rounded-xl text-xs border border-cyan-500/20 transition flex items-center space-x-2">
+                        <i class="fa-solid fa-copy"></i>
+                        <span id="lang-btn-copy">Kodu Kopyala</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- GRID MEDIA WALL -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="video-grid">
+                <!-- Local video container -->
+                <div class="relative bg-slate-950 rounded-2xl overflow-hidden border border-cyan-500/30 group aspect-video shadow-xl" id="local-video-card">
+                    <video id="local-video" autoplay playsinline muted class="w-full h-full"></video>
+                    <div class="absolute bottom-3 left-3 bg-slate-900/80 backdrop-blur px-3 py-1 rounded-lg text-xs font-bold text-cyan-400 border border-cyan-500/20">
+                        <span id="lang-you-label">Siz (Sahib)</span>
+                    </div>
+                    <!-- Status İkonları overlay -->
+                    <div class="absolute top-3 right-3 flex space-x-2">
+                        <div id="status-mic-off" class="hidden h-7 w-7 rounded-full bg-red-500/80 flex items-center justify-center text-white text-xs"><i class="fa-solid fa-microphone-slash"></i></div>
+                        <div id="status-cam-off" class="hidden h-7 w-7 rounded-full bg-red-500/80 flex items-center justify-center text-white text-xs"><i class="fa-solid fa-video-slash"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTROL PANEL -->
+            <div class="flex justify-center items-center space-x-4 py-4">
+                <!-- Səs aç/bağla -->
+                <button onclick="toggleAudio()" id="btn-toggle-audio" class="h-14 w-14 rounded-full bg-cyan-600 hover:bg-cyan-500 text-white flex items-center justify-center transition-all shadow-lg active:scale-95 text-lg">
+                    <i class="fa-solid fa-microphone" id="icon-audio"></i>
+                </button>
+                <!-- Kamera aç/bağla -->
+                <button onclick="toggleVideo()" id="btn-toggle-video" class="h-14 w-14 rounded-full bg-cyan-600 hover:bg-cyan-500 text-white flex items-center justify-center transition-all shadow-lg active:scale-95 text-lg">
+                    <i class="fa-solid fa-video" id="icon-video"></i>
+                </button>
+                <!-- Otaqdan çıx -->
+                <button onclick="leaveRoom()" id="btn-leave" class="h-14 w-16 rounded-2xl bg-red-600 hover:bg-red-500 text-white flex items-center justify-center transition-all shadow-lg active:scale-95 text-lg border border-red-500/30" title="Leave">
+                    <i class="fa-solid fa-phone-slash"></i>
+                </button>
+            </div>
         </div>
-      </div>
-    </div>
-  </div>
+    </main>
 
-  <!-- FILEBRIDGE -->
-  <div id="mod-file" class="module-section hidden space-y-4">
-    <h2 data-i18n="file_title" class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">📁 FileBridge</h2>
-    <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl max-w-lg space-y-4">
-      <div class="flex border-b border-slate-800 pb-3">
-        <button id="file-tab-send" class="flex-1 text-center font-bold text-cyan-400" onclick="toggleFileTab('send')" data-i18n="tab_send">Send</button>
-        <button id="file-tab-recv" class="flex-1 text-center font-bold text-slate-400" onclick="toggleFileTab('recv')" data-i18n="tab_receive">Receive</button>
-      </div>
-      <div id="file-send-area" class="space-y-4">
-        <div id="drop-zone" class="border-2 border-dashed border-slate-700 hover:border-cyan-500 rounded-xl p-8 text-center cursor-pointer transition">
-          <input type="file" id="file-input" class="hidden">
-          <span id="file-label" data-i18n="file_drop" class="text-sm text-slate-400"></span>
-        </div>
-        <button onclick="startHostingFile()" class="w-full bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-bold py-3 rounded-xl transition" data-i18n="file_getcode">Get Code</button>
-        <div id="file-success" class="hidden bg-cyan-950/30 border border-cyan-800 p-4 rounded-xl text-center space-y-2">
-          <p data-i18n="code_ready" class="text-xs text-cyan-400 font-mono"></p>
-          <p id="file-code" class="text-4xl font-mono font-bold tracking-widest text-white animate-pulse">----</p>
-        </div>
-      </div>
-      <div id="file-recv-area" class="hidden space-y-4">
-        <input type="text" id="file-code-input" maxlength="4" data-i18n-ph="code_ph" class="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 text-center text-xl font-mono tracking-widest text-white">
-        <button onclick="connectToDownload()" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 rounded-xl transition" data-i18n="file_dl_btn">Connect & Download</button>
-      </div>
-    </div>
-  </div>
+    <!-- NOTIFICATION SYSTEM -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 space-y-2"></div>
 
-  <!-- CAMBRIDGE -->
-  <div id="mod-cam" class="module-section hidden space-y-4">
-    <h2 data-i18n="cam_title" class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-teal-500">📹 CamBridge</h2>
-    <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl space-y-4">
-      <div class="flex flex-wrap gap-2 items-center">
-        <input type="number" id="cam-max-input" min="1" max="50" value="8" data-i18n-ph="max_users_ph" class="w-16 bg-slate-950 border border-slate-800 rounded-xl px-2 py-2 text-center text-xs text-white">
-        <button onclick="createCamRoom()" class="bg-teal-500 text-slate-950 px-4 py-2 rounded-xl font-bold text-xs transition" data-i18n="create_room">Create Room</button>
-        <input type="text" id="cam-code-input" data-i18n-ph="code_ph_short" class="w-24 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-center text-xs text-white">
-        <button onclick="joinCamRoom()" class="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-xl font-bold text-xs transition" data-i18n="join_btn">Join</button>
-        <p id="cam-code-display" class="text-xs text-teal-400 font-mono hidden ml-auto"><span data-i18n="room_code">Room code:</span> <span class="text-white font-bold tracking-wider"></span></p>
-      </div>
-      <div id="video-grid" class="video-grid min-h-[200px] bg-slate-950 p-4 rounded-xl border border-slate-800"></div>
-      <div id="cam-controls" class="hidden flex gap-2">
-        <button onclick="toggleCamMic()" id="btn-cam-mic" class="bg-slate-800 px-4 py-2 rounded-lg text-sm text-white">🎤</button>
-        <button onclick="toggleCamVideo()" id="btn-cam-video" class="bg-slate-800 px-4 py-2 rounded-lg text-sm text-white">📷</button>
-      </div>
-    </div>
-  </div>
+    <!-- MAIN CORE LOGIC SCRIPT -->
+    <script>
+        // LOKALİZASİYA DATA LÜĞƏTİ
+        const dictionary = {
+            en: {
+                welcome: "Secure Global P2P Networking",
+                subwelcome: "Encrypted P2P room infrastructure directly between browser nodes.",
+                createTitle: "Create Premium Room",
+                labelLimit: "Max Connected Guests (excluding you):",
+                btnCreate: "Launch Infrastructure",
+                joinTitle: "Join Existing Room",
+                labelCode: "Enter Secure Token/ID:",
+                btnJoin: "Establish Bridge",
+                connected: "Secure Mesh Token:",
+                slotLabel: "Nodes:",
+                btnCopy: "Copy ID",
+                youLabel: "You (Local Node)",
+                toastCopy: "Room Token copied to clipboard!",
+                toastMax: "Room full status reached!",
+                toastJoin: "New peer connected to structural mesh.",
+                toastLeave: "A peer disconnected from current mesh."
+            },
+            az: {
+                welcome: "Təhlükəsiz Qlobal P2P Şəbəkəsi",
+                subwelcome: "Heç bir server yaddaşı olmadan, birbaşa cihazlar arası şifrələnmiş video otaqlar.",
+                createTitle: "Yeni Otaq Yarat",
+                labelLimit: "Maksimum İştirakçı Sayı (Özünüzdən başqa):",
+                btnCreate: "Otağı Başlat",
+                joinTitle: "Mövcud Otağa Qoşul",
+                labelCode: "Otaq Kodunu Daxil Edin:",
+                btnJoin: "Qoşul",
+                connected: "Otaq Kodu:",
+                slotLabel: "İştirakçılar:",
+                btnCopy: "Kodu Kopyala",
+                youLabel: "Siz (Sahib)",
+                toastCopy: "Otaq kodu mübadilə yaddaşına kopyalandı!",
+                toastMax: "Otaq limiti dolub! Giriş rədd edildi.",
+                toastJoin: "Yeni istifadəçi şəbəkəyə qoşuldu.",
+                toastLeave: "İstifadəçi otaqdan ayrıldı."
+            },
+            tr: {
+                welcome: "Güvenli Küresel P2P Ağ Bağlantısı",
+                subwelcome: "Sunucu depolaması olmadan, tarayıcı düğümleri arasında doğrudan şifreli odalar.",
+                createTitle: "Yeni Oda Oluştur",
+                labelLimit: "Maksimum Katılımcı Sayısı (Siz hariç):",
+                btnCreate: "Odayı Başlat",
+                joinTitle: "Mevcut Odaya Katıl",
+                labelCode: "Oda Kodunu Girin:",
+                btnJoin: "Bağlantı Kur",
+                connected: "Oda Kodu:",
+                slotLabel: "Katılımcı:",
+                btnCopy: "Kodu Kopyala",
+                youLabel: "Siz (Sahip)",
+                toastCopy: "Oda kodu panoya kopyalandı!",
+                toastMax: "Oda maksimum kapasiteye ulaştı!",
+                toastJoin: "Yeni bir kullanıcı odaya giriş yaptı.",
+                toastLeave: "Bir kullanıcı odadan ayrıldı."
+            },
+            ru: {
+                welcome: "Безопасная Глобальная P2P Сеть",
+                subwelcome: "Зашифрованная медиа-структура напрямую между браузерами без хранения на сервере.",
+                createTitle: "Создать Комнату",
+                labelLimit: "Макс. гостей (не включая вас):",
+                btnCreate: "Запустить Сессию",
+                joinTitle: "Подключиться к Комнате",
+                labelCode: "Введите уникальный код/токен:",
+                btnJoin: "Подключиться",
+                connected: "Токен Комнаты:",
+                slotLabel: "Участники:",
+                btnCopy: "Копировать код",
+                youLabel: "Вы (Организатор)",
+                toastCopy: "Код комнаты скопирован в буфер обмена!",
+                toastMax: "Достигнут лимит участников в комнате!",
+                toastJoin: "Новый участник подключился к узлу.",
+                toastLeave: "Участник отключился от сессии."
+            },
+            zh: {
+                welcome: "安全全球 P2P 网络",
+                subwelcome: "浏览器节点之间直接建立加密的端到端音视频聊天房间。",
+                createTitle: "创建新房间",
+                labelLimit: "最大允许访客数（不包含自己）:",
+                btnCreate: "启动网桥",
+                joinTitle: "加入现有房间",
+                labelCode: "输入房间安全令牌/ID:",
+                btnJoin: "建立连接",
+                connected: "房间令牌:",
+                slotLabel: "当前节点数:",
+                btnCopy: "复制 ID",
+                youLabel: "您（本地节点）",
+                toastCopy: "房间代码已复制到剪贴板！",
+                toastMax: "房间已满！无法加入。",
+                toastJoin: "新用户已成功连接至网桥。",
+                toastLeave: "用户已从当前网桥断开连接。"
+            }
+        };
 
-  <!-- SCREENBRIDGE -->
-  <div id="mod-screen" class="module-section hidden space-y-4">
-    <h2 data-i18n="screen_title" class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-500">📺 ScreenBridge</h2>
-    <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl max-w-lg space-y-4">
-      <div class="flex border-b border-slate-800 pb-3">
-        <button id="screen-tab-send" class="flex-1 text-center font-bold text-teal-400" onclick="toggleScreenTab('send')" data-i18n="screen_share_tab">Share</button>
-        <button id="screen-tab-recv" class="flex-1 text-center font-bold text-slate-400" onclick="toggleScreenTab('recv')" data-i18n="screen_watch_tab">Watch</button>
-      </div>
-      <div id="screen-send-area" class="space-y-4">
-        <button onclick="startScreenShare()" class="w-full bg-teal-500 hover:bg-teal-600 text-slate-950 font-bold py-3 rounded-xl transition" data-i18n="screen_share_btn">Share Screen & Get Code</button>
-        <div id="screen-success" class="hidden bg-teal-950/30 border border-teal-800 p-4 rounded-xl text-center space-y-2">
-          <p data-i18n="code_ready" class="text-xs text-teal-400 font-mono"></p>
-          <p id="screen-code" class="text-4xl font-mono font-bold tracking-widest text-white animate-pulse">----</p>
-        </div>
-      </div>
-      <div id="screen-recv-area" class="hidden space-y-4">
-        <input type="text" id="screen-code-input" maxlength="4" data-i18n-ph="code_ph" class="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 text-center text-xl font-mono tracking-widest text-white">
-        <button onclick="connectToScreen()" class="w-full bg-teal-500 hover:bg-teal-600 text-slate-950 font-bold py-3 rounded-xl transition" data-i18n="screen_watch_btn">Watch Live</button>
-        <video id="remote-video" autoplay playsinline class="w-full rounded-xl border border-slate-800 hidden mt-4"></video>
-      </div>
-    </div>
-  </div>
+        let currentLang = 'en';
+        let localStream = null;
+        let peer = null;
+        let currentRoomId = null;
+        let roomMaxLimit = 4;
+        let connectedPeers = {}; // {peerId: callObject}
+        let activeConnections = {}; // {peerId: dataConnectionObject}
 
-  <!-- VOICEBRIDGE -->
-  <div id="mod-voice" class="module-section hidden space-y-4">
-    <h2 data-i18n="voice_title" class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">🎙️ VoiceBridge</h2>
-    <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl max-w-lg space-y-4">
-      <div class="flex border-b border-slate-800 pb-3">
-        <button id="voice-tab-host" class="flex-1 text-center font-bold text-purple-400" onclick="toggleVoiceTab('host')" data-i18n="create_room">Create Room</button>
-        <button id="voice-tab-join" class="flex-1 text-center font-bold text-slate-400" onclick="toggleVoiceTab('join')" data-i18n="join_btn">Join</button>
-      </div>
-      <div id="voice-host-area" class="space-y-4">
-        <input type="number" id="voice-max-input" min="1" max="50" value="8" data-i18n-ph="max_users_ph" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-center text-sm text-white">
-        <button onclick="startVoiceRoom()" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 rounded-xl transition" data-i18n="voice_create_btn">Open Mic & Create Room</button>
-        <div id="voice-success" class="hidden bg-purple-950/30 border border-purple-800 p-4 rounded-xl text-center space-y-2">
-          <p data-i18n="code_ready" class="text-xs text-purple-400 font-mono"></p>
-          <p id="voice-code" class="text-4xl font-mono font-bold tracking-widest text-white animate-pulse">----</p>
-        </div>
-        <div id="voice-controls" class="hidden">
-          <button onclick="toggleVoiceMic()" id="btn-voice-mic" class="w-full bg-slate-800 px-4 py-2 rounded-lg text-sm text-white">🎤 Mute</button>
-        </div>
-      </div>
-      <div id="voice-join-area" class="hidden space-y-4">
-        <input type="text" id="voice-code-input" maxlength="4" data-i18n-ph="code_ph" class="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 text-center text-xl font-mono tracking-widest text-white">
-        <button onclick="connectToVoice()" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 rounded-xl transition" data-i18n="voice_join_btn">Join Audio Channel</button>
-        <div id="voice-controls-join" class="hidden">
-          <button onclick="toggleVoiceMic()" id="btn-voice-mic-join" class="w-full bg-slate-800 px-4 py-2 rounded-lg text-sm text-white mt-2">🎤 Mute</button>
-        </div>
-      </div>
-      <audio id="remote-audio" autoplay class="hidden"></audio>
-    </div>
-  </div>
+        // DİL DEYİŞDİRMƏ SİSTEMİ
+        function changeLanguage(lang) {
+            currentLang = lang;
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('bg-cyan-500', 'text-slate-950', 'border-cyan-500');
+                btn.classList.add('text-slate-100', 'border-transparent');
+            });
+            const activeBtn = document.getElementById(`btn-${lang}`);
+            if(activeBtn) {
+                activeBtn.classList.add('bg-cyan-500', 'text-slate-950', 'border-cyan-500');
+            }
 
-  <!-- NOTECRYPT -->
-  <div id="mod-note" class="module-section hidden space-y-4">
-    <h2 data-i18n="note_title" class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-500">🔐 NoteCrypt</h2>
-    <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl max-w-lg space-y-4">
-      <div class="flex border-b border-slate-800 pb-3">
-        <button id="note-tab-create" class="flex-1 text-center font-bold text-orange-400" onclick="toggleNoteTab('create')" data-i18n="note_create_tab">Write Note</button>
-        <button id="note-tab-read" class="flex-1 text-center font-bold text-slate-400" onclick="toggleNoteTab('read')" data-i18n="note_read_tab">Read Note</button>
-      </div>
-      <div id="note-create-area" class="space-y-4">
-        <textarea id="note-text" data-i18n-ph="note_write_ph" class="w-full h-24 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm focus:outline-none focus:border-orange-500 text-white"></textarea>
-        <button onclick="shareEncryptedNote()" class="w-full bg-orange-500 hover:bg-orange-600 text-slate-950 font-bold py-3 rounded-xl transition" data-i18n="note_encrypt_btn">Encrypt & Get Code</button>
-        <div id="note-success" class="hidden bg-orange-950/30 border border-orange-800 p-4 rounded-xl text-center space-y-2">
-          <p data-i18n="code_ready" class="text-xs text-orange-400 font-mono"></p>
-          <p id="note-code" class="text-4xl font-mono font-bold tracking-widest text-white animate-pulse">----</p>
-        </div>
-      </div>
-      <div id="note-read-area" class="hidden space-y-4">
-        <input type="text" id="note-code-input" maxlength="4" data-i18n-ph="code_ph" class="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 text-center text-xl font-mono tracking-widest text-white">
-        <button onclick="readEncryptedNote()" class="w-full bg-orange-500 hover:bg-orange-600 text-slate-950 font-bold py-3 rounded-xl transition" data-i18n="note_read_btn">Decrypt Note</button>
-        <div id="decrypted-box" class="hidden bg-slate-950 border border-slate-800 p-4 rounded-xl text-sm text-amber-200 whitespace-pre-wrap"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- CHATBRIDGE -->
-  <div id="mod-chat" class="module-section hidden space-y-4">
-    <h2 data-i18n="chat_title" class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-rose-500">💬 ChatBridge</h2>
-    <div class="bg-slate-900/50 border border-slate-800 p-4 rounded-2xl max-w-lg space-y-4 flex flex-col h-[400px]">
-      <div id="chat-auth" class="space-y-4 my-auto">
-        <div class="flex space-x-2">
-          <button onclick="startChat()" class="flex-1 bg-pink-600 hover:bg-pink-700 text-white py-3 rounded-xl font-bold transition" data-i18n="create_room">Create Room</button>
-          <input type="text" id="chat-code-input" data-i18n-ph="code_ph_short" class="w-24 bg-slate-950 border border-slate-800 rounded-xl py-3 text-center text-white">
-          <button onclick="joinChat()" class="bg-slate-800 hover:bg-slate-700 text-white px-4 rounded-xl font-bold transition" data-i18n="join_btn">Join</button>
-        </div>
-        <p id="chat-my-code" class="text-xs text-center text-pink-400 font-mono hidden"><span data-i18n="room_code">Room code:</span> <span class="text-white font-bold tracking-widest text-sm"></span></p>
-      </div>
-      <div id="chat-box" class="hidden flex-grow flex flex-col justify-between overflow-hidden">
-        <div id="chat-messages" class="flex-grow overflow-y-auto space-y-2 p-2 border border-slate-800 rounded-xl mb-2 text-sm max-h-[250px]"></div>
-        <div class="flex space-x-2">
-          <input type="text" id="chat-input" data-i18n-ph="chat_input_ph" onkeydown="if(event.key==='Enter')sendChatMessage()" class="flex-grow bg-slate-950 border border-slate-800 rounded-xl px-3 text-sm focus:outline-none focus:border-pink-500 text-white">
-          <button onclick="sendChatMessage()" class="bg-pink-600 text-white px-4 py-2 rounded-xl text-sm font-bold" data-i18n="chat_send">Send</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- BOARDBRIDGE -->
-  <div id="mod-board" class="module-section hidden space-y-4">
-    <h2 data-i18n="board_title" class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">🎨 BoardBridge</h2>
-    <div class="bg-slate-900/50 border border-slate-800 p-4 rounded-2xl space-y-4">
-      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
-        <div class="flex space-x-2">
-          <button onclick="startBoard()" class="bg-yellow-500 text-slate-950 px-3 py-1.5 rounded-lg text-xs font-bold" data-i18n="board_open">Open Board</button>
-          <input type="text" id="board-code-input" data-i18n-ph="code_ph_short" class="w-20 bg-slate-950 border border-slate-800 rounded-lg text-center text-xs text-white">
-          <button onclick="joinBoard()" class="bg-slate-800 px-3 py-1.5 rounded-lg text-xs font-bold text-white" data-i18n="join_btn">Join</button>
-        </div>
-        <p id="board-code-display" class="text-xs text-yellow-400 font-mono hidden"><span data-i18n="code_label">Code:</span> <span class="text-white font-bold"></span></p>
-        <div class="flex space-x-2">
-          <input type="color" id="board-color" value="#e2e8f0" class="w-6 h-6 rounded cursor-pointer bg-transparent border-0">
-          <button onclick="clearBoard()" class="bg-red-950 border border-red-800 text-red-400 px-2.5 py-1 rounded-lg text-xs" data-i18n="board_clear">Clear</button>
-        </div>
-      </div>
-      <canvas id="whiteboard" class="w-full h-80 bg-slate-950 rounded-xl border border-slate-800 cursor-crosshair"></canvas>
-    </div>
-  </div>
-
-  <!-- GAMEBRIDGE -->
-  <div id="mod-game" class="module-section hidden space-y-4">
-    <h2 data-i18n="game_title" class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500">👾 GameBridge — P2P Space Fight</h2>
-    <div class="bg-slate-900/50 border border-slate-800 p-4 rounded-2xl space-y-4 text-center">
-      <div class="flex justify-center space-x-2 mb-2">
-        <button onclick="hostGame()" class="bg-blue-600 px-4 py-1.5 rounded-lg text-xs font-bold text-white" data-i18n="create_room">Create Room</button>
-        <input type="text" id="game-code-input" data-i18n-ph="code_ph_short" class="w-20 bg-slate-950 border border-slate-800 text-center text-xs text-white rounded-lg">
-        <button onclick="joinGame()" class="bg-indigo-600 px-4 py-1.5 rounded-lg text-xs font-bold text-white" data-i18n="join_btn">Join</button>
-      </div>
-      <p id="game-code-display" class="text-xs text-blue-400 font-mono mb-2 hidden"><span data-i18n="room_code">Room code:</span> <span class="text-white font-bold"></span></p>
-      <canvas id="game-canvas" width="600" height="300" class="mx-auto bg-black rounded-xl border border-slate-800 hidden"></canvas>
-      <div id="game-controls" class="hidden text-slate-500 text-xs mt-2" data-i18n="game_controls">🎮 Controls: W / S (Up/Down), Space (Fire)</div>
-    </div>
-  </div>
-
-</div>
-</main>
-
-<script>
-// ==================== TRANSLATIONS ====================
-const translations = {
-  en: {
-    appTag:"Global P2P Bridge", footer_author:"Author: Farid Humbatzade",
-    nav_random:"Random Global Chat", nav_file:"FileBridge", nav_cam:"CamBridge", nav_screen:"ScreenBridge",
-    nav_voice:"VoiceBridge", nav_note:"NoteCrypt", nav_chat:"ChatBridge", nav_board:"BoardBridge", nav_game:"GameBridge",
-    random_title:"🌍 Random Global Chat", random_desc:"Connect instantly with a random stranger — no room code needed. Choose your mode first.",
-    random_mode_text:"Text", random_mode_voice:"Voice", random_mode_video:"Video",
-    random_find_btn:"Find Partner", random_searching:"Searching for a partner...", random_cancel:"Cancel",
-    random_skip:"Next", random_leave:"Leave",
-    file_title:"📁 FileBridge — Unlimited File Transfer", tab_send:"Send", tab_receive:"Receive",
-    file_drop:"Drop file here or click", file_getcode:"Get Code", code_ready:"Ready! Connection code:",
-    code_ph:"4-digit code", file_dl_btn:"Connect & Download",
-    cam_title:"📹 CamBridge — Multi-user P2P Video Room", max_users_ph:"Max users", create_room:"Create Room",
-    code_ph_short:"Room code", join_btn:"Join", room_code:"Room code:",
-    screen_title:"📺 ScreenBridge — Live Screen Share", screen_share_tab:"Share", screen_watch_tab:"Watch",
-    screen_share_btn:"Share Screen & Get Code", screen_watch_btn:"Watch Live",
-    voice_title:"🎙️ VoiceBridge — P2P Voice Room", voice_create_btn:"Open Mic & Create Room", voice_join_btn:"Join Audio Channel",
-    note_title:"🔐 NoteCrypt — Encrypted Note Sharing", note_create_tab:"Write Note", note_read_tab:"Read Note",
-    note_write_ph:"Type your secret note here...", note_encrypt_btn:"Encrypt & Get Code", note_read_btn:"Decrypt Note",
-    chat_title:"💬 ChatBridge — Multi-user Mesh Chat", chat_input_ph:"Type a message...", chat_send:"Send",
-    board_title:"🎨 BoardBridge — Shared Whiteboard", board_open:"Open Board", code_label:"Code:", board_clear:"Clear",
-    game_title:"👾 GameBridge — P2P Space Fight", game_controls:"🎮 Controls: W / S (Up/Down), Space (Fire)"
-  },
-  ru: {
-    appTag:"Глобальный P2P мост", footer_author:"Автор: Фарид Хумбатзаде",
-    nav_random:"Случайный глобальный чат", nav_file:"FileBridge", nav_cam:"CamBridge", nav_screen:"ScreenBridge",
-    nav_voice:"VoiceBridge", nav_note:"NoteCrypt", nav_chat:"ChatBridge", nav_board:"BoardBridge", nav_game:"GameBridge",
-    random_title:"🌍 Случайный глобальный чат", random_desc:"Мгновенное соединение со случайным незнакомцем — код не нужен. Сначала выберите режим.",
-    random_mode_text:"Текст", random_mode_voice:"Голос", random_mode_video:"Видео",
-    random_find_btn:"Найти собеседника", random_searching:"Поиск собеседника...", random_cancel:"Отмена",
-    random_skip:"Далее", random_leave:"Выйти",
-    file_title:"📁 FileBridge — Безлимитная передача файлов", tab_send:"Отправить", tab_receive:"Получить",
-    file_drop:"Перетащите файл сюда или нажмите", file_getcode:"Получить код", code_ready:"Готово! Код подключения:",
-    code_ph:"4-значный код", file_dl_btn:"Подключиться и скачать",
-    cam_title:"📹 CamBridge — Многопользовательская видео-комната", max_users_ph:"Макс. участников", create_room:"Создать комнату",
-    code_ph_short:"Код комнаты", join_btn:"Войти", room_code:"Код комнаты:",
-    screen_title:"📺 ScreenBridge — Прямая трансляция экрана", screen_share_tab:"Транслировать", screen_watch_tab:"Смотреть",
-    screen_share_btn:"Начать трансляцию и получить код", screen_watch_btn:"Смотреть онлайн",
-    voice_title:"🎙️ VoiceBridge — Голосовая комната", voice_create_btn:"Включить микрофон и создать комнату", voice_join_btn:"Войти в аудиоканал",
-    note_title:"🔐 NoteCrypt — Зашифрованные заметки", note_create_tab:"Написать заметку", note_read_tab:"Прочитать заметку",
-    note_write_ph:"Введите секретную заметку...", note_encrypt_btn:"Зашифровать и получить код", note_read_btn:"Расшифровать",
-    chat_title:"💬 ChatBridge — Групповой mesh-чат", chat_input_ph:"Введите сообщение...", chat_send:"Отправить",
-    board_title:"🎨 BoardBridge — Общая доска", board_open:"Открыть доску", code_label:"Код:", board_clear:"Очистить",
-    game_title:"👾 GameBridge — P2P космический бой", game_controls:"🎮 Управление: W / S (вверх/вниз), Пробел (огонь)"
-  },
-  az: {
-    appTag:"Qlobal P2P Körpü", footer_author:"Müəllif: Fərid Hümbətzadə",
-    nav_random:"Random Qlobal Söhbət", nav_file:"FileBridge", nav_cam:"CamBridge", nav_screen:"ScreenBridge",
-    nav_voice:"VoiceBridge", nav_note:"NoteCrypt", nav_chat:"ChatBridge", nav_board:"BoardBridge", nav_game:"GameBridge",
-    random_title:"🌍 Random Qlobal Söhbət", random_desc:"Kodsuz olaraq təsadüfi bir istifadəçi ilə anında qoşulun. Əvvəlcə rejimi seçin.",
-    random_mode_text:"Mətn", random_mode_voice:"Səs", random_mode_video:"Video",
-    random_find_btn:"Tərəf-müqabil Tap", random_searching:"Tərəf-müqabil axtarılır...", random_cancel:"Ləğv et",
-    random_skip:"Növbəti", random_leave:"Tərk et",
-    file_title:"📁 FileBridge — Limitsiz Fayl Ötürülməsi", tab_send:"Göndər", tab_receive:"Qəbul Et",
-    file_drop:"Faylı bura atın və ya klikləyin", file_getcode:"Kod Al", code_ready:"Hazırdır! Qoşulma kodu:",
-    code_ph:"4 rəqəmli kod", file_dl_btn:"Qoşul və Endir",
-    cam_title:"📹 CamBridge — Çoxistifadəçili P2P Görüntülü Otaq", max_users_ph:"Maks. istifadəçi", create_room:"Otaq Yarat",
-    code_ph_short:"Otaq Kodu", join_btn:"Qoşul", room_code:"Otaq kodu:",
-    screen_title:"📺 ScreenBridge — Canlı Ekran Yayımı", screen_share_tab:"Yayımla", screen_watch_tab:"İzlə",
-    screen_share_btn:"Ekranı Paylaş və Kod Al", screen_watch_btn:"Canlı İzlə",
-    voice_title:"🎙️ VoiceBridge — P2P Səsli Otaq", voice_create_btn:"Mikrofonu Aç və Otaq Yarat", voice_join_btn:"Səsli Kanala Qoşul",
-    note_title:"🔐 NoteCrypt — Şifrəli Qeyd Paylaşımı", note_create_tab:"Qeyd Yaz", note_read_tab:"Qeyd Oxu",
-    note_write_ph:"Gizli qeydinizi bura yazın...", note_encrypt_btn:"Şifrələ və Kod Al", note_read_btn:"Şifrədən Çıxar",
-    chat_title:"💬 ChatBridge — Mesh Çat", chat_input_ph:"Mesaj yazın...", chat_send:"Göndər",
-    board_title:"🎨 BoardBridge — Ortaq Lövhə", board_open:"Lövhəni Aç", code_label:"Kod:", board_clear:"Təmizlə",
-    game_title:"👾 GameBridge — P2P Space Fight", game_controls:"🎮 İdarəetmə: W / S (Yuxarı/Aşağı), Space (Atəş)"
-  },
-  tr: {
-    appTag:"Global P2P Köprü", footer_author:"Yazar: Farid Humbatzade",
-    nav_random:"Rastgele Global Sohbet", nav_file:"FileBridge", nav_cam:"CamBridge", nav_screen:"ScreenBridge",
-    nav_voice:"VoiceBridge", nav_note:"NoteCrypt", nav_chat:"ChatBridge", nav_board:"BoardBridge", nav_game:"GameBridge",
-    random_title:"🌍 Rastgele Global Sohbet", random_desc:"Kod olmadan rastgele biriyle anında bağlan. Önce modu seç.",
-    random_mode_text:"Metin", random_mode_voice:"Sesli", random_mode_video:"Görüntülü",
-    random_find_btn:"Eşleş", random_searching:"Eşleşme aranıyor...", random_cancel:"İptal",
-    random_skip:"Sonraki", random_leave:"Ayrıl",
-    file_title:"📁 FileBridge — Sınırsız Dosya Transferi", tab_send:"Gönder", tab_receive:"Al",
-    file_drop:"Dosyayı buraya bırakın veya tıklayın", file_getcode:"Kod Al", code_ready:"Hazır! Bağlantı kodu:",
-    code_ph:"4 haneli kod", file_dl_btn:"Bağlan ve İndir",
-    cam_title:"📹 CamBridge — Çok Kullanıcılı Görüntülü Oda", max_users_ph:"Maks. kullanıcı", create_room:"Oda Oluştur",
-    code_ph_short:"Oda Kodu", join_btn:"Katıl", room_code:"Oda kodu:",
-    screen_title:"📺 ScreenBridge — Canlı Ekran Yayını", screen_share_tab:"Yayınla", screen_watch_tab:"İzle",
-    screen_share_btn:"Ekranı Paylaş ve Kod Al", screen_watch_btn:"Canlı İzle",
-    voice_title:"🎙️ VoiceBridge — Sesli Oda", voice_create_btn:"Mikrofonu Aç ve Oda Oluştur", voice_join_btn:"Sesli Kanala Katıl",
-    note_title:"🔐 NoteCrypt — Şifreli Not Paylaşımı", note_create_tab:"Not Yaz", note_read_tab:"Not Oku",
-    note_write_ph:"Gizli notunuzu buraya yazın...", note_encrypt_btn:"Şifrele ve Kod Al", note_read_btn:"Şifreyi Çöz",
-    chat_title:"💬 ChatBridge — Mesh Sohbet", chat_input_ph:"Mesaj yazın...", chat_send:"Gönder",
-    board_title:"🎨 BoardBridge — Ortak Tahta", board_open:"Tahtayı Aç", code_label:"Kod:", board_clear:"Temizle",
-    game_title:"👾 GameBridge — P2P Uzay Savaşı", game_controls:"🎮 Kontroller: W / S (Yukarı/Aşağı), Boşluk (Ateş)"
-  },
-  zh: {
-    appTag:"全球 P2P 桥接", footer_author:"作者：Farid Humbatzade",
-    nav_random:"随机全球聊天", nav_file:"文件桥接", nav_cam:"视频桥接", nav_screen:"屏幕桥接",
-    nav_voice:"语音桥接", nav_note:"加密笔记", nav_chat:"群聊桥接", nav_board:"白板桥接", nav_game:"游戏桥接",
-    random_title:"🌍 随机全球聊天", random_desc:"无需房间代码，即刻与随机陌生人连接。请先选择模式。",
-    random_mode_text:"文字", random_mode_voice:"语音", random_mode_video:"视频",
-    random_find_btn:"寻找对象", random_searching:"正在寻找匹配对象...", random_cancel:"取消",
-    random_skip:"下一位", random_leave:"离开",
-    file_title:"📁 文件桥接 — 无限文件传输", tab_send:"发送", tab_receive:"接收",
-    file_drop:"将文件拖放到此处或点击", file_getcode:"获取代码", code_ready:"准备就绪！连接代码：",
-    code_ph:"4位数代码", file_dl_btn:"连接并下载",
-    cam_title:"📹 视频桥接 — 多人P2P视频房间", max_users_ph:"最大人数", create_room:"创建房间",
-    code_ph_short:"房间代码", join_btn:"加入", room_code:"房间代码：",
-    screen_title:"📺 屏幕桥接 — 实时屏幕共享", screen_share_tab:"共享", screen_watch_tab:"观看",
-    screen_share_btn:"共享屏幕并获取代码", screen_watch_btn:"实时观看",
-    voice_title:"🎙️ 语音桥接 — P2P语音房间", voice_create_btn:"开启麦克风并创建房间", voice_join_btn:"加入语音频道",
-    note_title:"🔐 加密笔记 — 加密笔记分享", note_create_tab:"写笔记", note_read_tab:"读笔记",
-    note_write_ph:"在此输入您的私密笔记...", note_encrypt_btn:"加密并获取代码", note_read_btn:"解密笔记",
-    chat_title:"💬 群聊桥接 — 多人网状聊天", chat_input_ph:"输入消息...", chat_send:"发送",
-    board_title:"🎨 白板桥接 — 共享白板", board_open:"打开白板", code_label:"代码：", board_clear:"清除",
-    game_title:"👾 游戏桥接 — P2P太空大战", game_controls:"🎮 操作: W / S (上/下), 空格 (开火)"
-  }
-};
-
-let currentLang = 'az';
-
-function setLang(lang){
-  currentLang = lang;
-  document.documentElement.lang = lang;
-  document.querySelectorAll('[data-i18n]').forEach(el=>{
-    const key = el.getAttribute('data-i18n');
-    if(translations[lang] && translations[lang][key] !== undefined) el.textContent = translations[lang][key];
-  });
-  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{
-    const key = el.getAttribute('data-i18n-ph');
-    if(translations[lang] && translations[lang][key] !== undefined) el.placeholder = translations[lang][key];
-  });
-  document.querySelectorAll('.flag-btn').forEach(b=>b.classList.remove('active-flag'));
-  const f = document.getElementById('flag-'+lang);
-  if(f) f.classList.add('active-flag');
-}
-document.addEventListener('DOMContentLoaded', ()=> setLang(currentLang));
-
-// ==================== CORE STATE ====================
-let peer = null;
-let connections = [];
-let myStream = null;
-let camMaxParticipants = 8;
-let voiceMaxParticipants = 8;
-
-function switchModule(modName){
-  document.querySelectorAll('.module-section').forEach(el => el.classList.add('hidden'));
-  document.querySelectorAll('.sidebar-btn').forEach(el => el.classList.remove('active'));
-  document.getElementById(`mod-${modName}`).classList.remove('hidden');
-  document.getElementById(`btn-${modName}`).classList.add('active');
-  stopStreams();
-  cleanupRandom(true);
-  resetRandomUI();
-}
-
-function stopStreams(){
-  if(myStream){ myStream.getTracks().forEach(t=>t.stop()); myStream = null; }
-  connections.forEach(c=>{ try{ c.close(); }catch(e){} });
-  connections = [];
-  if(peer){ try{ peer.destroy(); }catch(e){} peer = null; }
-  if(gameInterval) clearInterval(gameInterval);
-  document.getElementById('video-grid').innerHTML = '';
-  document.getElementById('cam-controls').classList.add('hidden');
-  document.getElementById('voice-controls').classList.add('hidden');
-  document.getElementById('voice-controls-join').classList.add('hidden');
-}
-
-function generateShortId(){ return Math.floor(1000 + Math.random()*9000).toString(); }
-
-// TAB TOGGLERS
-function toggleFileTab(tab){
-  document.getElementById('file-tab-send').className = tab==='send' ? 'flex-1 text-center font-bold text-cyan-400' : 'flex-1 text-center font-bold text-slate-400';
-  document.getElementById('file-tab-recv').className = tab==='recv' ? 'flex-1 text-center font-bold text-cyan-400' : 'flex-1 text-center font-bold text-slate-400';
-  document.getElementById('file-send-area').className = tab==='send' ? 'space-y-4' : 'hidden';
-  document.getElementById('file-recv-area').className = tab==='recv' ? 'space-y-4' : 'hidden';
-}
-function toggleScreenTab(tab){
-  document.getElementById('screen-tab-send').className = tab==='send' ? 'flex-1 text-center font-bold text-teal-400' : 'flex-1 text-center font-bold text-slate-400';
-  document.getElementById('screen-tab-recv').className = tab==='recv' ? 'flex-1 text-center font-bold text-teal-400' : 'flex-1 text-center font-bold text-slate-400';
-  document.getElementById('screen-send-area').className = tab==='send' ? 'space-y-4' : 'hidden';
-  document.getElementById('screen-recv-area').className = tab==='recv' ? 'space-y-4' : 'hidden';
-}
-function toggleVoiceTab(tab){
-  document.getElementById('voice-tab-host').className = tab==='host' ? 'flex-1 text-center font-bold text-purple-400' : 'flex-1 text-center font-bold text-slate-400';
-  document.getElementById('voice-tab-join').className = tab==='join' ? 'flex-1 text-center font-bold text-purple-400' : 'flex-1 text-center font-bold text-slate-400';
-  document.getElementById('voice-host-area').className = tab==='host' ? 'space-y-4' : 'hidden';
-  document.getElementById('voice-join-area').className = tab==='join' ? 'space-y-4' : 'hidden';
-}
-function toggleNoteTab(tab){
-  document.getElementById('note-tab-create').className = tab==='create' ? 'flex-1 text-center font-bold text-orange-400' : 'flex-1 text-center font-bold text-slate-400';
-  document.getElementById('note-tab-read').className = tab==='read' ? 'flex-1 text-center font-bold text-orange-400' : 'flex-1 text-center font-bold text-slate-400';
-  document.getElementById('note-create-area').className = tab==='create' ? 'space-y-4' : 'hidden';
-  document.getElementById('note-read-area').className = tab==='read' ? 'space-y-4' : 'hidden';
-}
-
-// ==================== 1. FILEBRIDGE ====================
-let selectedFile = null;
-const dropZone = document.getElementById('drop-zone');
-const fileInput = document.getElementById('file-input');
-const fileLabelEl = document.getElementById('file-label');
-dropZone.addEventListener('click', () => fileInput.click());
-fileInput.addEventListener('change', () => {
-  if(fileInput.files.length > 0){ selectedFile = fileInput.files[0]; fileLabelEl.innerText = selectedFile.name; }
-});
-function startHostingFile(){
-  if(!selectedFile){ alert('Select a file first!'); return; }
-  const shortId = generateShortId();
-  peer = new Peer("fbridge-" + shortId);
-  peer.on('open', () => {
-    document.getElementById('file-code').innerText = shortId;
-    document.getElementById('file-success').classList.remove('hidden');
-  });
-  peer.on('connection', (connection) => {
-    connections.push(connection);
-    connection.on('open', () => connection.send({ file: selectedFile, name: selectedFile.name, type: selectedFile.type }));
-  });
-}
-function connectToDownload(){
-  const code = document.getElementById('file-code-input').value.trim();
-  peer = new Peer();
-  peer.on('open', () => {
-    const conn = peer.connect("fbridge-" + code);
-    conn.on('data', (data) => {
-      const blob = new Blob([data.file], { type: data.type });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = data.name;
-      link.click();
-    });
-  });
-}
-
-// ==================== 2. CAMBRIDGE (capacity + mic/cam toggle) ====================
-let myId = "";
-let camIsHost = false;
-
-async function createCamRoom(){
-  const val = parseInt(document.getElementById('cam-max-input').value) || 8;
-  camMaxParticipants = Math.max(1, Math.min(50, val));
-  const shortId = generateShortId();
-  setupCamPeer(shortId, true);
-}
-async function joinCamRoom(){
-  const code = document.getElementById('cam-code-input').value.trim();
-  setupCamPeer(code, false);
-}
-
-async function setupCamPeer(roomCode, isHost){
-  try{
-    myStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    addVideoFeed(myStream, "You", true);
-    document.getElementById('cam-controls').classList.remove('hidden');
-    camIsHost = isHost;
-
-    myId = isHost ? "cam-" + roomCode : "cam-" + roomCode + "-" + generateShortId();
-    peer = new Peer(myId);
-
-    peer.on('open', () => {
-      const display = document.getElementById('cam-code-display');
-      display.querySelector('span').innerText = roomCode;
-      display.classList.remove('hidden');
-      if(!isHost){
-        const hostConn = peer.connect("cam-" + roomCode);
-        hostConn.on('open', () => hostConn.send({ type: 'join', peerId: myId }));
-        hostConn.on('data', (d)=>{ if(d.type==='room-full'){ alert('Room is full!'); } });
-      }
-    });
-
-    peer.on('connection', (connection) => {
-      connections.push(connection);
-      connection.on('data', (data) => {
-        if(data.type === 'join'){
-          if(isHost && connections.length > camMaxParticipants){
-            connection.send({ type: 'room-full' });
-            connection.close();
-            return;
-          }
-          const call = peer.call(data.peerId, myStream);
-          call.on('stream', (userStream) => addVideoFeed(userStream, "User"));
-          if(isHost){
-            connections.forEach(c => { if(c.peer !== data.peerId) c.send({ type: 'new-peer', peerId: data.peerId }); });
-          }
+            // Mətnlərin renderi
+            document.getElementById('lang-welcome').innerText = dictionary[lang].welcome;
+            document.getElementById('lang-subwelcome').innerText = dictionary[lang].subwelcome;
+            document.getElementById('lang-create-title').innerText = dictionary[lang].createTitle;
+            document.getElementById('lang-label-limit').innerText = dictionary[lang].labelLimit;
+            document.getElementById('lang-btn-create').innerText = dictionary[lang].btnCreate;
+            document.getElementById('lang-join-title').innerText = dictionary[lang].joinTitle;
+            document.getElementById('lang-label-code').innerText = dictionary[lang].labelCode;
+            document.getElementById('lang-btn-join').innerText = dictionary[lang].btnJoin;
+            document.getElementById('lang-status-connected').innerText = dictionary[lang].connected;
+            document.getElementById('lang-slot-label').innerText = dictionary[lang].slotLabel;
+            document.getElementById('lang-btn-copy').innerText = dictionary[lang].btnCopy;
+            document.getElementById('lang-you-label').innerText = dictionary[lang].youLabel;
         }
-        if(data.type === 'new-peer'){
-          const call = peer.call(data.peerId, myStream);
-          call.on('stream', (userStream) => addVideoFeed(userStream, "User"));
+
+        // INITIALIZE APP
+        window.addEventListener('DOMContentLoaded', () => {
+            changeLanguage('en');
+            // Əgər URL-də birbaşa otaq kodu gəlibsə avtomatik inputa yerləşdir
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomParam = urlParams.get('room');
+            if(roomParam) {
+                document.getElementById('room-id-input').value = roomParam;
+            }
+        });
+
+        // TOAST NOTIFICATION GENERATOR
+        function showToast(messageKey) {
+            const container = document.getElementById('toast-container');
+            const msg = dictionary[currentLang][messageKey] || messageKey;
+            const toast = document.createElement('div');
+            toast.className = "bg-slate-900 border border-cyan-500/30 text-slate-200 px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-2 text-sm animate-bounce";
+            toast.innerHTML = `<i class="fa-solid fa-bell text-cyan-400"></i> <span>${msg}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
         }
-      });
-    });
 
-    peer.on('call', (call) => {
-      call.answer(myStream);
-      call.on('stream', (remoteStream) => addVideoFeed(remoteStream, "User"));
-    });
+        // MEDIA STREAM INITIALIZER
+        async function initMedia() {
+            if (!localStream) {
+                try {
+                    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                    document.getElementById('local-video').srcObject = localStream;
+                } catch (err) {
+                    console.error("Media access denied:", err);
+                    // Əgər kamera yoxdursa yalnız audio və ya dummy stream yoxla
+                    localStream = new MediaStream();
+                }
+            }
+        }
 
-  } catch(err){
-    alert("Camera/microphone access denied!");
-    console.error(err);
-  }
-}
+        // GENERIC PEER CONFIGURATION
+        function setupPeer(targetId = null) {
+            return new Promise((resolve) => {
+                // Stabil işləmək üçün qlobal ümumi cloud PeerJS serverindən istifadə olunur
+                peer = new Peer(targetId, {
+                    debug: 1,
+                    config: {
+                        iceServers: [
+                            { urls: 'stun:stun.l.google.com:19302' },
+                            { urls: 'stun:stun1.l.google.com:19302' },
+                            { urls: 'stun:stun2.l.google.com:19302' }
+                        ]
+                    }
+                });
 
-function addVideoFeed(stream, labelText, isMuted = false){
-  const grid = document.getElementById('video-grid');
-  const existing = Array.from(grid.querySelectorAll('video')).find(v => v.srcObject && v.srcObject.id === stream.id);
-  if(existing) return;
-  const container = document.createElement('div');
-  container.className = "relative bg-slate-900 rounded-xl overflow-hidden border border-slate-800";
-  const video = document.createElement('video');
-  video.srcObject = stream; video.autoplay = true; video.playsInline = true;
-  if(isMuted) video.muted = true;
-  video.className = "w-full h-full object-cover rounded-xl aspect-video";
-  const badge = document.createElement('span');
-  badge.className = "absolute bottom-2 left-2 bg-slate-950/80 text-xxs px-2 py-1 rounded text-cyan-400 font-bold";
-  badge.innerText = labelText;
-  container.appendChild(video); container.appendChild(badge);
-  grid.appendChild(container);
-}
+                peer.on('open', (id) => {
+                    resolve(id);
+                });
 
-function toggleCamMic(){
-  if(!myStream) return;
-  const track = myStream.getAudioTracks()[0];
-  track.enabled = !track.enabled;
-  document.getElementById('btn-cam-mic').innerText = track.enabled ? '🎤' : '🔇';
-}
-function toggleCamVideo(){
-  if(!myStream) return;
-  const track = myStream.getVideoTracks()[0];
-  track.enabled = !track.enabled;
-  document.getElementById('btn-cam-video').innerText = track.enabled ? '📷' : '🚫';
-}
+                peer.on('error', (err) => {
+                    console.error("P2P Mesh Error:", err.type);
+                    if(err.type === 'unavailable-id') {
+                        alert("Room serialization conflict. Retrying setup.");
+                    }
+                });
+            });
+        }
 
-// ==================== 3. SCREENBRIDGE ====================
-async function startScreenShare(){
-  try{
-    myStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-    const shortId = generateShortId();
-    peer = new Peer("sbridge-" + shortId);
-    peer.on('open', () => {
-      document.getElementById('screen-code').innerText = shortId;
-      document.getElementById('screen-success').classList.remove('hidden');
-    });
-    peer.on('call', (call) => call.answer(myStream));
-  } catch(err){ alert("Could not share screen."); }
-}
-function connectToScreen(){
-  const code = document.getElementById('screen-code-input').value.trim();
-  peer = new Peer();
-  peer.on('open', () => {
-    const call = peer.call("sbridge-" + code, new MediaStream());
-    call.on('stream', (remoteStream) => {
-      const video = document.getElementById('remote-video');
-      video.srcObject = remoteStream;
-      video.classList.remove('hidden');
-    });
-  });
-}
+        // CREATE ROOM ROUTINE
+        async function createNewRoom() {
+            roomMaxLimit = parseInt(document.getElementById('room-limit-input').value) || 4;
+            await initMedia();
 
-// ==================== 4. VOICEBRIDGE (capacity + mute toggle, mesh) ====================
-async function startVoiceRoom(){
-  try{
-    const val = parseInt(document.getElementById('voice-max-input').value) || 8;
-    voiceMaxParticipants = Math.max(1, Math.min(50, val));
-    myStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const shortId = generateShortId();
-    peer = new Peer("vbridge-" + shortId);
-    peer.on('open', () => {
-      document.getElementById('voice-code').innerText = shortId;
-      document.getElementById('voice-success').classList.remove('hidden');
-      document.getElementById('voice-controls').classList.remove('hidden');
-    });
-    peer.on('connection', (connection) => {
-      if(connections.length >= voiceMaxParticipants){ connection.send({type:'room-full'}); connection.close(); return; }
-      connections.push(connection);
-    });
-    peer.on('call', (call) => {
-      if(connections.length > voiceMaxParticipants){ call.close(); return; }
-      call.answer(myStream);
-      call.on('stream', (remoteStream) => { document.getElementById('remote-audio').srcObject = remoteStream; });
-    });
-  } catch(err){ alert("Microphone access denied."); }
-}
-async function connectToVoice(){
-  const code = document.getElementById('voice-code-input').value.trim();
-  try{
-    myStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    peer = new Peer();
-    peer.on('open', () => {
-      const call = peer.call("vbridge-" + code, myStream);
-      call.on('stream', (remoteStream) => { document.getElementById('remote-audio').srcObject = remoteStream; });
-      document.getElementById('voice-controls-join').classList.remove('hidden');
-    });
-  } catch(err){ alert("Microphone error."); }
-}
-function toggleVoiceMic(){
-  if(!myStream) return;
-  const track = myStream.getAudioTracks()[0];
-  track.enabled = !track.enabled;
-  const label = track.enabled ? '🎤 Mute' : '🔇 Unmute';
-  const b1 = document.getElementById('btn-voice-mic'); if(b1) b1.innerText = label;
-  const b2 = document.getElementById('btn-voice-mic-join'); if(b2) b2.innerText = label;
-}
+            // Unikal təmiz otaq strukturu generatası p2p-xxxx
+            const generatedRoomId = 'p2p-' + Math.random().toString(36).substring(2, 6) + '-' + Math.random().toString(36).substring(2, 6);
+            
+            await setupPeer(generatedRoomId);
+            currentRoomId = generatedRoomId;
 
-// ==================== 5. NOTECRYPT ====================
-function shareEncryptedNote(){
-  const noteText = document.getElementById('note-text').value.trim();
-  if(!noteText){ alert("Write something first!"); return; }
-  const shortId = generateShortId();
-  peer = new Peer("nbridge-" + shortId);
-  peer.on('open', () => {
-    document.getElementById('note-code').innerText = shortId;
-    document.getElementById('note-success').classList.remove('hidden');
-  });
-  peer.on('connection', (connection) => {
-    connections.push(connection);
-    connection.on('open', () => connection.send({ text: noteText }));
-  });
-}
-function readEncryptedNote(){
-  const code = document.getElementById('note-code-input').value.trim();
-  peer = new Peer();
-  peer.on('open', () => {
-    const conn = peer.connect("nbridge-" + code);
-    conn.on('data', (data) => {
-      const box = document.getElementById('decrypted-box');
-      box.innerText = data.text;
-      box.classList.remove('hidden');
-    });
-  });
-}
+            document.getElementById('room-limit-display').innerText = roomMaxLimit + 1; // +1 özü daxil
+            executeRoomTransition();
 
-// ==================== 6. CHATBRIDGE (mesh) ====================
-function startChat(){ setupChatPeer(generateShortId(), true); }
-function joinChat(){ setupChatPeer(document.getElementById('chat-code-input').value.trim(), false); }
+            // Gələn qoşulma sorğularını qəbul etmək
+            peer.on('connection', (conn) => {
+                handleIncomingDataConnection(conn);
+            });
 
-function setupChatPeer(roomCode, isHost){
-  myId = isHost ? "chat-" + roomCode : "chat-" + roomCode + "-" + generateShortId();
-  peer = new Peer(myId);
-  peer.on('open', () => {
-    document.getElementById('chat-auth').classList.add('hidden');
-    document.getElementById('chat-box').classList.remove('hidden');
-    const display = document.getElementById('chat-my-code');
-    display.querySelector('span').innerText = roomCode;
-    display.classList.remove('hidden');
-    if(!isHost){
-      const hostConn = peer.connect("chat-" + roomCode);
-      hostConn.on('open', () => hostConn.send({ type: 'join', peerId: myId }));
-      connections.push(hostConn);
-      setupChatEvents(hostConn);
-    }
-  });
-  peer.on('connection', (connection) => { connections.push(connection); setupChatEvents(connection, isHost); });
-}
-function setupChatEvents(connection, isHost){
-  connection.on('data', (data) => {
-    if(data.type === 'join' && isHost){
-      connections.forEach(c => { if(c.peer !== data.peerId) c.send({ type: 'new-peer', peerId: data.peerId }); });
-      const newConn = peer.connect(data.peerId); connections.push(newConn); setupChatEvents(newConn, false);
-    }
-    if(data.type === 'new-peer'){
-      const newConn = peer.connect(data.peerId); connections.push(newConn); setupChatEvents(newConn, false);
-    }
-    if(data.chat){
-      appendChatMessage(data.chat, 'partner');
-      if(isHost) connections.forEach(c => { if(c.peer !== connection.peer) c.send({ chat: data.chat }); });
-    }
-  });
-}
-function sendChatMessage(){
-  const input = document.getElementById('chat-input');
-  const val = input.value.trim();
-  if(!val) return;
-  connections.forEach(c => { if(c.open) c.send({ chat: val }); });
-  appendChatMessage(val, 'me');
-  input.value = '';
-}
-function appendChatMessage(text, sender){
-  const box = document.getElementById('chat-messages');
-  const wrapper = document.createElement('div');
-  wrapper.className = sender === 'me' ? 'text-right' : 'text-left';
-  const msg = document.createElement('span');
-  msg.className = sender === 'me' ? 'inline-block bg-pink-600 text-white rounded-lg px-3 py-1.5 max-w-xs' : 'inline-block bg-slate-800 text-slate-100 rounded-lg px-3 py-1.5 max-w-xs';
-  msg.innerText = text;
-  wrapper.appendChild(msg); box.appendChild(wrapper); box.scrollTop = box.scrollHeight;
-}
+            peer.on('call', (call) => {
+                // Sahibin otağında cari say limitini yoxla
+                const totalActive = Object.keys(connectedPeers).length + 1;
+                if(totalActive >= (roomMaxLimit + 1)) {
+                    // Limiti keçibsə rədd et, data connection ilə imtina göndər
+                    return;
+                }
+                call.answer(localStream);
+                handleIncomingCall(call);
+            });
+        }
 
-// ==================== 7. BOARDBRIDGE (mesh) ====================
-const canvas = document.getElementById('whiteboard');
-const ctx = canvas.getContext('2d');
-let drawing = false;
-function resizeCanvas(){ canvas.width = canvas.parentElement.clientWidth; canvas.height = 320; ctx.lineCap='round'; ctx.lineWidth=3; }
-window.addEventListener('resize', resizeCanvas); resizeCanvas();
+        // JOIN DIRECT VIA CODE
+        async function joinRoomDirect() {
+            const targetRoomId = document.getElementById('room-id-input').value.trim();
+            if(!targetRoomId) return;
 
-function startBoard(){ setupBoardPeer(generateShortId(), true); }
-function joinBoard(){ setupBoardPeer(document.getElementById('board-code-input').value.trim(), false); }
-function setupBoardPeer(roomCode, isHost){
-  myId = isHost ? "board-" + roomCode : "board-" + roomCode + "-" + generateShortId();
-  peer = new Peer(myId);
-  peer.on('open', () => {
-    const d = document.getElementById('board-code-display');
-    d.querySelector('span').innerText = roomCode; d.classList.remove('hidden');
-    if(!isHost){
-      const hostConn = peer.connect("board-" + roomCode);
-      hostConn.on('open', () => hostConn.send({ type: 'join', peerId: myId }));
-      connections.push(hostConn); setupBoardEvents(hostConn);
-    }
-  });
-  peer.on('connection', (connection) => { connections.push(connection); setupBoardEvents(connection, isHost); });
-}
-function setupBoardEvents(connection, isHost){
-  connection.on('data', (data) => {
-    if(data.type === 'join' && isHost){
-      connections.forEach(c => { if(c.peer !== data.peerId) c.send({ type: 'new-peer', peerId: data.peerId }); });
-      const newConn = peer.connect(data.peerId); connections.push(newConn); setupBoardEvents(newConn, false);
-    }
-    if(data.type === 'new-peer'){ const newConn = peer.connect(data.peerId); connections.push(newConn); setupBoardEvents(newConn, false); }
-    if(data.draw){
-      drawLine(data.draw.x0, data.draw.y0, data.draw.x1, data.draw.y1, data.draw.color, false);
-      if(isHost) connections.forEach(c => { if(c.peer !== connection.peer) c.send({ draw: data.draw }); });
-    }
-    if(data.clear){
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      if(isHost) connections.forEach(c => { if(c.peer !== connection.peer) c.send({ clear: true }); });
-    }
-  });
-}
-let lastX=0, lastY=0;
-canvas.addEventListener('mousedown', e => { drawing=true; [lastX,lastY]=[e.offsetX,e.offsetY]; });
-canvas.addEventListener('mouseup', () => drawing=false);
-canvas.addEventListener('mousemove', e => {
-  if(!drawing) return;
-  const color = document.getElementById('board-color').value;
-  drawLine(lastX,lastY,e.offsetX,e.offsetY,color,true);
-  [lastX,lastY]=[e.offsetX,e.offsetY];
-});
-canvas.addEventListener('touchstart', e => { drawing=true; const t=e.touches[0]; const r=canvas.getBoundingClientRect(); [lastX,lastY]=[t.clientX-r.left,t.clientY-r.top]; });
-canvas.addEventListener('touchend', () => drawing=false);
-canvas.addEventListener('touchmove', e => {
-  if(!drawing) return;
-  const t=e.touches[0]; const r=canvas.getBoundingClientRect();
-  const color = document.getElementById('board-color').value;
-  drawLine(lastX,lastY,t.clientX-r.left,t.clientY-r.top,color,true);
-  [lastX,lastY]=[t.clientX-r.left,t.clientY-r.top];
-});
-function drawLine(x0,y0,x1,y1,color,sync){
-  ctx.beginPath(); ctx.strokeStyle=color; ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.stroke();
-  if(sync && connections.length>0) connections.forEach(c => { if(c.open) c.send({ draw:{x0,y0,x1,y1,color} }); });
-}
-function clearBoard(){ ctx.clearRect(0,0,canvas.width,canvas.height); connections.forEach(c => { if(c.open) c.send({clear:true}); }); }
+            await initMedia();
+            await setupPeer(); // Avtomatik random ID ilə öz peer-ini quraşdırır
 
-// ==================== 8. GAMEBRIDGE ====================
-const gCanvas = document.getElementById('game-canvas');
-const gCtx = gCanvas.getContext('2d');
-let gameInterval = null;
-let localPlayer = { y:130, score:0 };
-let remotePlayer = { y:130, score:0 };
-let ball = { x:300, y:150, vx:4, vy:4 };
-let isGameHost = false;
+            currentRoomId = targetRoomId;
+            executeRoomTransition();
 
-function hostGame(){
-  const shortId = generateShortId();
-  peer = new Peer("gbridge-" + shortId);
-  isGameHost = true;
-  peer.on('open', () => { const d=document.getElementById('game-code-display'); d.querySelector('span').innerText=shortId; d.classList.remove('hidden'); });
-  peer.on('connection', (connection) => { connections.push(connection); startGameLoop(); });
-}
-function joinGame(){
-  const code = document.getElementById('game-code-input').value.trim();
-  peer = new Peer(); isGameHost = false;
-  peer.on('open', () => { const conn = peer.connect("gbridge-" + code); connections.push(conn); startGameLoop(); });
-}
-function startGameLoop(){
-  gCanvas.classList.remove('hidden');
-  document.getElementById('game-controls').classList.remove('hidden');
-  connections.forEach(conn => {
-    conn.on('data', (data) => {
-      if(data.y !== undefined) remotePlayer.y = data.y;
-      if(data.ball !== undefined) ball = data.ball;
-      if(data.score !== undefined){ localPlayer.score = data.score.r; remotePlayer.score = data.score.l; }
-    });
-  });
-  window.addEventListener('keydown', (e) => {
-    if(e.key==='w'||e.key==='W'){ localPlayer.y=Math.max(0,localPlayer.y-15); syncGame(); }
-    if(e.key==='s'||e.key==='S'){ localPlayer.y=Math.min(240,localPlayer.y+15); syncGame(); }
-  });
-  gameInterval = setInterval(updateGame, 1000/60);
-}
-function syncGame(){ connections.forEach(c => { if(c.open) c.send({ y: localPlayer.y }); }); }
-function updateGame(){
-  if(isGameHost){
-    ball.x += ball.vx; ball.y += ball.vy;
-    if(ball.y<0||ball.y>290) ball.vy=-ball.vy;
-    if(ball.x<20 && ball.y>localPlayer.y && ball.y<localPlayer.y+60) ball.vx=-ball.vx;
-    if(ball.x>570 && ball.y>remotePlayer.y && ball.y<remotePlayer.y+60) ball.vx=-ball.vx;
-    if(ball.x<0){ remotePlayer.score++; resetBall(); }
-    if(ball.x>600){ localPlayer.score++; resetBall(); }
-    connections.forEach(c => { if(c.open) c.send({ ball, score:{l:localPlayer.score,r:remotePlayer.score} }); });
-  }
-  drawGame();
-}
-function resetBall(){ ball.x=300; ball.y=150; ball.vx=-ball.vx; }
-function drawGame(){
-  gCtx.fillStyle='#000'; gCtx.fillRect(0,0,600,300);
-  gCtx.strokeStyle='#334155'; gCtx.setLineDash([5,15]);
-  gCtx.beginPath(); gCtx.moveTo(300,0); gCtx.lineTo(300,300); gCtx.stroke();
-  gCtx.fillStyle='#22d3ee'; gCtx.fillRect(10, isGameHost?localPlayer.y:remotePlayer.y, 10, 60);
-  gCtx.fillStyle='#818cf8'; gCtx.fillRect(580, isGameHost?remotePlayer.y:localPlayer.y, 10, 60);
-  gCtx.fillStyle='#f43f5e'; gCtx.beginPath(); gCtx.arc(ball.x, ball.y, 6, 0, Math.PI*2); gCtx.fill();
-  gCtx.fillStyle='#fff'; gCtx.font='20px monospace';
-  gCtx.fillText(isGameHost?localPlayer.score:remotePlayer.score, 250, 40);
-  gCtx.fillText(isGameHost?remotePlayer.score:localPlayer.score, 330, 40);
-}
+            // Əvvəlcə otaq sahibinə data kanalı açırıq ki limit yoxlanılsın
+            const dataConn = peer.connect(targetRoomId);
+            handleIncomingDataConnection(dataConn);
 
-// ==================== 9. RANDOM GLOBAL CHAT ====================
-const RANDOM_POOL_SIZE = 30;
-let randomMode = 'text';
-let randomPeer = null;
-let randomConn = null;
-let randomStream = null;
-let randomRetryTimer = null;
+            // Zəng et
+            const call = peer.call(targetRoomId, localStream);
+            handleIncomingCall(call);
 
-function selectRandomMode(mode){
-  randomMode = mode;
-  document.querySelectorAll('.rmode-btn').forEach(b=>b.classList.remove('ring-2'));
-  document.getElementById('rmode-'+mode).classList.add('ring-2');
-}
+            peer.on('call', (incomingCall) => {
+                incomingCall.answer(localStream);
+                handleIncomingCall(incomingCall);
+            });
+            
+            peer.on('connection', (conn) => {
+                handleIncomingDataConnection(conn);
+            });
+        }
 
-async function startRandomSearch(){
-  document.getElementById('random-setup').classList.add('hidden');
-  document.getElementById('random-searching').classList.remove('hidden');
-  try{
-    if(randomMode === 'voice') randomStream = await navigator.mediaDevices.getUserMedia({audio:true});
-    else if(randomMode === 'video') randomStream = await navigator.mediaDevices.getUserMedia({audio:true, video:true});
-  } catch(e){ alert('Camera/microphone access denied'); resetRandomUI(); return; }
-  tryRandomSlot();
-}
+        // UI TRANSITION SETUP
+        function executeRoomTransition() {
+            document.getElementById('lobby-screen').classList.add('hidden');
+            document.getElementById('room-screen').classList.remove('hidden');
+            document.getElementById('current-room-display').innerText = currentRoomId;
+            updateParticipantUI();
+        }
 
-function tryRandomSlot(){
-  const slot = Math.floor(Math.random()*RANDOM_POOL_SIZE);
-  const slotId = `p2pomni-rnd-${randomMode}-${slot}`;
-  const p = new Peer(slotId);
-  randomPeer = p;
+        // HOOK DATA CHANNELS
+        function handleIncomingDataConnection(conn) {
+            activeConnections[conn.peer] = conn;
+            conn.on('data', (data) => {
+                if(data.type === 'room-meta') {
+                    // Host-dan gələn limit datasını tətbiq et
+                    roomMaxLimit = data.limit;
+                    document.getElementById('room-limit-display').innerText = roomMaxLimit + 1;
+                }
+                if(data.type === 'rejected-full') {
+                    alert(dictionary[currentLang].toastMax);
+                    leaveRoom();
+                }
+                if(data.type === 'sync-status') {
+                    toggleRemoteStatusIndicators(conn.peer, data.mediaType, data.enabled);
+                }
+            });
 
-  p.on('open', () => {
-    randomRetryTimer = setTimeout(() => { if(!randomConn){ p.destroy(); tryRandomSlot(); } }, 9000);
-    p.on('connection', (conn) => { clearTimeout(randomRetryTimer); randomConn = conn; setupRandomConnection(conn, true); });
-  });
+            conn.on('open', () => {
+                // Əgər otaq sahibiyiksə, qoşulana limit məlumatlarını ötürək
+                if(peer.id === currentRoomId) {
+                    const totalActive = Object.keys(connectedPeers).length + 1;
+                    if(totalActive > (roomMaxLimit + 1)) {
+                        conn.send({type: 'rejected-full'});
+                        return;
+                    }
+                    conn.send({type: 'room-meta', limit: roomMaxLimit});
+                    // Digər otaq iştirakçılarını da yeni gələnə ötürmək zəncirvari P2P şəbəkəsi qurur (Full Mesh)
+                    broadcastToAll({type: 'update-mesh'});
+                }
+            });
+        }
 
-  p.on('error', (err) => {
-    if(err.type === 'unavailable-id'){ p.destroy(); joinAsRandomGuest(slotId); }
-    else { p.destroy(); setTimeout(tryRandomSlot, 1000); }
-  });
-}
+        // HOOK MEDIA CALLS
+        function handleIncomingCall(call) {
+            connectedPeers[call.peer] = call;
+            
+            call.on('stream', (remoteStream) => {
+                injectRemoteVideo(call.peer, remoteStream);
+            });
 
-function joinAsRandomGuest(slotId){
-  const p = new Peer();
-  randomPeer = p;
-  p.on('open', () => {
-    const conn = p.connect(slotId, { reliable: true });
-    let settled = false;
-    conn.on('open', () => { settled = true; randomConn = conn; setupRandomConnection(conn, false); });
-    conn.on('error', () => { if(!settled){ p.destroy(); setTimeout(tryRandomSlot, 500); } });
-    setTimeout(() => { if(!settled){ p.destroy(); tryRandomSlot(); } }, 4000);
-  });
-  p.on('error', () => { p.destroy(); setTimeout(tryRandomSlot, 1000); });
-}
+            call.on('close', () => {
+                removeRemoteVideo(call.peer);
+            });
 
-function setupRandomConnection(conn, hostSide){
-  document.getElementById('random-searching').classList.add('hidden');
-  document.getElementById('random-active').classList.remove('hidden');
-  document.getElementById('random-chat-messages').innerHTML = '';
+            updateParticipantUI();
+            showToast('toastJoin');
+        }
 
-  conn.on('data', (data) => { if(data.chat) appendRandomMessage(data.chat, 'partner'); });
-  conn.on('close', () => appendRandomMessage('--- Partner left ---', 'system'));
+        // INJECT VIDEO ELEMENT TO MESH GRID
+        function injectRemoteVideo(peerId, stream) {
+            if(document.getElementById(`card-${peerId}`)) return;
 
-  if(randomMode === 'voice' || randomMode === 'video'){
-    document.getElementById('btn-random-mic').classList.remove('hidden');
-    if(randomMode === 'video'){
-      document.getElementById('btn-random-cam').classList.remove('hidden');
-      document.getElementById('random-video-grid').classList.remove('hidden');
-      addVideoFeedRandom(randomStream, 'You', true);
-    }
-    if(hostSide){
-      randomPeer.on('call', (call) => { call.answer(randomStream); call.on('stream', rs => handleRandomRemoteStream(rs)); });
-    } else {
-      const call = randomPeer.call(conn.peer, randomStream);
-      call.on('stream', rs => handleRandomRemoteStream(rs));
-    }
-  }
-}
+            const grid = document.getElementById('video-grid');
+            const card = document.createElement('div');
+            card.id = `card-${peerId}`;
+            card.className = "relative bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 group aspect-video shadow-xl";
+            
+            const video = document.createElement('video');
+            video.srcObject = stream;
+            video.autoplay = true;
+            video.playsinline = true;
+            video.className = "w-full h-full";
 
-function handleRandomRemoteStream(remoteStream){
-  if(randomMode === 'video') addVideoFeedRandom(remoteStream, 'Partner');
-  else {
-    document.getElementById('random-remote-audio').srcObject = remoteStream;
-    document.getElementById('random-remote-audio').classList.remove('hidden');
-  }
-}
+            const label = document.createElement('div');
+            label.className = "absolute bottom-3 left-3 bg-slate-900/80 backdrop-blur px-3 py-1 rounded-lg text-xs font-bold text-slate-300 border border-slate-700/50";
+            label.innerText = `Peer [${peerId.substring(4, 8)}]`;
 
-function addVideoFeedRandom(stream, label, muted=false){
-  const grid = document.getElementById('random-video-grid');
-  const container = document.createElement('div');
-  container.className = "relative bg-slate-900 rounded-xl overflow-hidden border border-slate-800";
-  const video = document.createElement('video');
-  video.srcObject = stream; video.autoplay = true; video.playsInline = true;
-  if(muted) video.muted = true;
-  video.className = "w-full h-full object-cover rounded-xl aspect-video";
-  const badge = document.createElement('span');
-  badge.className = "absolute bottom-2 left-2 bg-slate-950/80 text-xs px-2 py-1 rounded text-emerald-400 font-bold";
-  badge.innerText = label;
-  container.appendChild(video); container.appendChild(badge);
-  grid.appendChild(container);
-}
+            // Remote Status Overlays
+            const overlay = document.createElement('div');
+            overlay.className = "absolute top-3 right-3 flex space-x-2";
+            overlay.innerHTML = `
+                <div id="mic-${peerId}" class="hidden h-7 w-7 rounded-full bg-red-500/80 flex items-center justify-center text-white text-xs"><i class="fa-solid fa-microphone-slash"></i></div>
+                <div id="cam-${peerId}" class="hidden h-7 w-7 rounded-full bg-red-500/80 flex items-center justify-center text-white text-xs"><i class="fa-solid fa-video-slash"></i></div>
+            `;
 
-function toggleRandomMic(){
-  if(!randomStream) return;
-  const track = randomStream.getAudioTracks()[0];
-  if(!track) return;
-  track.enabled = !track.enabled;
-  document.getElementById('btn-random-mic').innerText = track.enabled ? '🎤' : '🔇';
-}
-function toggleRandomCam(){
-  if(!randomStream) return;
-  const track = randomStream.getVideoTracks()[0];
-  if(!track) return;
-  track.enabled = !track.enabled;
-  document.getElementById('btn-random-cam').innerText = track.enabled ? '📷' : '🚫';
-}
+            card.appendChild(video);
+            card.appendChild(label);
+            card.appendChild(overlay);
+            grid.appendChild(card);
+            
+            updateParticipantUI();
+        }
 
-function sendRandomMessage(){
-  const input = document.getElementById('random-chat-input');
-  const val = input.value.trim();
-  if(!val || !randomConn || !randomConn.open) return;
-  randomConn.send({ chat: val });
-  appendRandomMessage(val, 'me');
-  input.value = '';
-}
-function appendRandomMessage(text, sender){
-  const box = document.getElementById('random-chat-messages');
-  const wrapper = document.createElement('div');
-  wrapper.className = sender==='me' ? 'text-right' : (sender==='system' ? 'text-center text-slate-500 text-xs' : 'text-left');
-  if(sender !== 'system'){
-    const msg = document.createElement('span');
-    msg.className = sender==='me' ? 'inline-block bg-emerald-600 text-white rounded-lg px-3 py-1.5 max-w-xs' : 'inline-block bg-slate-800 text-slate-100 rounded-lg px-3 py-1.5 max-w-xs';
-    msg.innerText = text; wrapper.appendChild(msg);
-  } else { wrapper.innerText = text; }
-  box.appendChild(wrapper); box.scrollTop = box.scrollHeight;
-}
+        // REMOVE FROM MESH
+        function removeRemoteVideo(peerId) {
+            const card = document.getElementById(`card-${peerId}`);
+            if(card) card.remove();
+            if(connectedPeers[peerId]) delete connectedPeers[peerId];
+            if(activeConnections[peerId]) delete activeConnections[peerId];
+            updateParticipantUI();
+            showToast('toastLeave');
+        }
 
-function skipRandomPartner(){
-  cleanupRandom(false);
-  document.getElementById('random-active').classList.add('hidden');
-  document.getElementById('random-searching').classList.remove('hidden');
-  tryRandomSlot();
-}
-function leaveRandom(){ cleanupRandom(true); resetRandomUI(); }
+        // MULTICAST DATA PACKETS
+        function broadcastToAll(packet) {
+            Object.values(activeConnections).forEach(conn => {
+                if(conn.open) conn.send(packet);
+            });
+        }
 
-function cleanupRandom(stopMedia){
-  if(randomRetryTimer) clearTimeout(randomRetryTimer);
-  if(randomConn){ try{ randomConn.close(); }catch(e){} randomConn = null; }
-  if(randomPeer){ try{ randomPeer.destroy(); }catch(e){} randomPeer = null; }
-  if(stopMedia && randomStream){ randomStream.getTracks().forEach(t=>t.stop()); randomStream = null; }
-  document.getElementById('random-video-grid').innerHTML = '';
-}
-function resetRandomUI(){
-  document.getElementById('random-active').classList.add('hidden');
-  document.getElementById('random-searching').classList.add('hidden');
-  document.getElementById('random-setup').classList.remove('hidden');
-  document.getElementById('btn-random-mic').classList.add('hidden');
-  document.getElementById('btn-random-cam').classList.add('hidden');
-  document.getElementById('random-video-grid').classList.add('hidden');
-  document.getElementById('random-remote-audio').classList.add('hidden');
-}
-</script>
+        // COUNTER SYNCHRONIZATION
+        function updateParticipantUI() {
+            const count = Object.keys(connectedPeers).length + 1;
+            document.getElementById('participant-count').innerText = count;
+        }
+
+        // REMOTE AUDIO/VIDEO VISUAL STATE MANAGER
+        function toggleRemoteStatusIndicators(peerId, mediaType, isEnabled) {
+            const indicator = document.getElementById(`${mediaType === 'audio' ? 'mic' : 'cam'}-${peerId}`);
+            if(indicator) {
+                if(isEnabled) indicator.classList.add('hidden');
+                else indicator.classList.remove('hidden');
+            }
+        }
+
+        // AUDIO TOGGLE (MUTE/UNMUTE)
+        function toggleAudio() {
+            if(!localStream) return;
+            const audioTrack = localStream.getAudioTracks()[0];
+            if(audioTrack) {
+                audioTrack.enabled = !audioTrack.enabled;
+                const icon = document.getElementById('icon-audio');
+                const btn = document.getElementById('btn-toggle-audio');
+                const indicator = document.getElementById('status-mic-off');
+
+                if(audioTrack.enabled) {
+                    icon.className = "fa-solid fa-microphone";
+                    btn.className = "h-14 w-14 rounded-full bg-cyan-600 hover:bg-cyan-500 text-white flex items-center justify-center transition-all shadow-lg text-lg";
+                    indicator.classList.add('hidden');
+                } else {
+                    icon.className = "fa-solid fa-microphone-slash";
+                    btn.className = "h-14 w-14 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center transition-all shadow-lg text-lg";
+                    indicator.classList.remove('hidden');
+                }
+                broadcastToAll({type: 'sync-status', mediaType: 'audio', enabled: audioTrack.enabled});
+            }
+        }
+
+        // VIDEO TOGGLE (ON/OFF)
+        function toggleVideo() {
+            if(!localStream) return;
+            const videoTrack = localStream.getVideoTracks()[0];
+            if(videoTrack) {
+                videoTrack.enabled = !videoTrack.enabled;
+                const icon = document.getElementById('icon-video');
+                const btn = document.getElementById('btn-toggle-video');
+                const indicator = document.getElementById('status-cam-off');
+
+                if(videoTrack.enabled) {
+                    icon.className = "fa-solid fa-video";
+                    btn.className = "h-14 w-14 rounded-full bg-cyan-600 hover:bg-cyan-500 text-white flex items-center justify-center transition-all shadow-lg text-lg";
+                    indicator.classList.add('hidden');
+                } else {
+                    icon.className = "fa-solid fa-video-slash";
+                    btn.className = "h-14 w-14 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center transition-all shadow-lg text-lg";
+                    indicator.classList.remove('hidden');
+                }
+                broadcastToAll({type: 'sync-status', mediaType: 'video', enabled: videoTrack.enabled});
+            }
+        }
+
+        // UTILITY: UTILS TO COPY LINK
+        function copyRoomLink() {
+            if(!currentRoomId) return;
+            const link = window.location.origin + window.location.pathname + '?room=' + currentRoomId;
+            navigator.clipboard.writeText(link).then(() => {
+                showToast('toastCopy');
+            });
+        }
+
+        // DISCONNECT ROUTINE
+        function leaveRoom() {
+            if(localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            if(peer) {
+                peer.destroy();
+            }
+            // Səhifəni tam ilkin vəziyyətinə sıfırla
+            window.location.href = window.location.origin + window.location.pathname;
+        }
+    </script>
 </body>
 </html>
