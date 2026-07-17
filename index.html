@@ -3,873 +3,726 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BridgeSuite Premium — Universal Multi-P2P Hub</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <title>P2POmni — Global Matrix</title>
     <style>
-        body { background-color: #0b0f19; }
-        .sidebar-btn.active {
-            background-color: #1e293b;
-            color: #22d3ee;
-            border-left: 4px solid #22d3ee;
+        :root {
+            --bg-color: #0b0f19;
+            --panel-bg: #131c2e;
+            --accent-color: #00ffcc;
+            --accent-hover: #00d4aa;
+            --text-color: #ffffff;
+            --text-muted: #8a99ad;
+            --danger: #ff4a5a;
+            --danger-hover: #e03b4a;
+            --success: #2ec4b6;
         }
-        canvas { touch-action: none; }
-        .video-grid {
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Header & Language Switcher */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: rgba(19, 28, 46, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 255, 204, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: var(--text-color);
+        }
+
+        .logo span {
+            color: var(--accent-color);
+            text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+        }
+
+        .lang-selector {
+            display: flex;
+            gap: 12px;
+        }
+
+        .flag-btn {
+            font-size: 24px;
+            background: none;
+            border: 2px solid transparent;
+            cursor: pointer;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            padding: 2px;
+            line-height: 1;
+        }
+
+        .flag-btn:hover, .flag-btn.active {
+            border-color: var(--accent-color);
+            transform: scale(1.15);
+            box-shadow: 0 0 8px rgba(0, 255, 204, 0.4);
+        }
+
+        /* Main Container */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* Dashboard Setup Panel */
+        .setup-container {
+            background: var(--panel-bg);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+
+        .setup-container h2 {
+            margin-bottom: 25px;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 14px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            border-color: var(--accent-color);
+            outline: none;
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.2);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: var(--accent-color);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background: var(--accent-hover);
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* Connection / Room State Layout */
+        .workspace {
+            display: none;
+            width: 100%;
+            grid-template-columns: 1fr 350px;
+            gap: 25px;
+            height: calc(100vh - 160px);
+        }
+
+        .video-grid-container {
+            display: flex;
+            flex-direction: column;
+            background: rgba(19, 28, 46, 0.5);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+        }
+
+        .room-info-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0,0,0,0.3);
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .room-id-display {
+            color: var(--accent-color);
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .video-streams {
+            flex: 1;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            align-content: center;
+            justify-content: center;
+        }
+
+        .video-wrapper {
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            aspect-ratio: 16/9;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .video-wrapper.local-stream {
+            border-color: var(--accent-color);
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .stream-labels {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.6);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            backdrop-filter: blur(4px);
+        }
+
+        /* Controls Panel */
+        .controls {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            background: rgba(19, 28, 46, 0.9);
+            padding: 12px 25px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .control-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            font-size: 18px;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .control-btn.muted {
+            background: var(--danger);
+        }
+
+        .control-btn.muted:hover {
+            background: var(--danger-hover);
+        }
+
+        /* Signal/Data Panel */
+        .signal-panel {
+            background: var(--panel-bg);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--accent-color);
+        }
+
+        .signal-box {
+            flex: 1;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 12px;
+            color: var(--text-muted);
+            overflow-y: auto;
+            margin-bottom: 15px;
+            word-break: break-all;
+        }
+
+        .signal-input-area textarea {
+            width: 100%;
+            height: 80px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #fff;
+            padding: 10px;
+            font-size: 13px;
+            resize: none;
+            margin-bottom: 10px;
+        }
+
+        .signal-btn {
+            width: 100%;
+            padding: 10px;
+            background: transparent;
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .signal-btn:hover {
+            background: var(--accent-color);
+            color: #000;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .status-badge.connected {
+            background: var(--success);
         }
     </style>
 </head>
-<body class="text-slate-100 min-h-screen flex flex-col md:flex-row font-sans">
+<body>
 
-    <aside class="w-full md:w-64 bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 p-6 flex flex-col justify-between">
-        <div>
-            <div class="mb-6">
-                <h1 class="text-2xl font-black tracking-wider text-cyan-400">🌐 BridgeSuite</h1>
-                <p class="text-xs text-slate-500 font-mono">v5.0.0 (Full Mesh Edition)</p>
-            </div>
+    <header>
+        <div class="logo">P2P<span>OMNI</span></div>
+        <div class="lang-selector">
+            <button class="flag-btn active" onclick="switchLanguage('az')" title="Azərbaycanca">🇦🇿</button>
+            <button class="flag-btn" onclick="switchLanguage('tr')" title="Türkçe">🇹🇷</button>
+            <button class="flag-btn" onclick="switchLanguage('en')" title="English">🇺🇸</button>
+            <button class="flag-btn" onclick="switchLanguage('ru')" title="Русский">🇷🇺</button>
+            <button class="flag-btn" onclick="switchLanguage('zh')" title="中文">🇨🇳</button>
+        </div>
+    </header>
+
+    <main>
+        <!-- Giriş və Quraşdırma Paneli -->
+        <div class="setup-container" id="setupPanel">
+            <h2 id="txtSetupTitle">Otaq Yaradın və ya Qoşulun</h2>
             
-            <nav class="space-y-1.5 text-sm">
-                <button onclick="switchModule('file')" id="btn-file" class="sidebar-btn active w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left text-slate-400 hover:bg-slate-800 hover:text-white transition">
-                    <span>📁</span> <span>FileBridge (Fayl)</span>
-                </button>
-                <button onclick="switchModule('cam')" id="btn-cam" class="sidebar-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left text-slate-400 hover:bg-slate-800 hover:text-white transition">
-                    <span>📹</span> <span>CamBridge (Görüntülü)</span>
-                </button>
-                <button onclick="switchModule('screen')" id="btn-screen" class="sidebar-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left text-slate-400 hover:bg-slate-800 hover:text-white transition">
-                    <span>📺</span> <span>ScreenBridge (Ekran)</span>
-                </button>
-                <button onclick="switchModule('voice')" id="btn-voice" class="sidebar-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left text-slate-400 hover:bg-slate-800 hover:text-white transition">
-                    <span>🎙️</span> <span>VoiceBridge (Telsiz)</span>
-                </button>
-                <button onclick="switchModule('note')" id="btn-note" class="sidebar-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left text-slate-400 hover:bg-slate-800 hover:text-white transition">
-                    <span>🔐</span> <span>NoteCrypt (Qeyd)</span>
-                </button>
-                <button onclick="switchModule('chat')" id="btn-chat" class="sidebar-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left text-slate-400 hover:bg-slate-800 hover:text-white transition">
-                    <span>💬</span> <span>ChatBridge (Mesh Çat)</span>
-                </button>
-                <button onclick="switchModule('board')" id="btn-board" class="sidebar-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left text-slate-400 hover:bg-slate-800 hover:text-white transition">
-                    <span>🎨</span> <span>BoardBridge (Lövhə)</span>
-                </button>
-                <button onclick="switchModule('game')" id="btn-game" class="sidebar-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left text-slate-400 hover:bg-slate-800 hover:text-white transition">
-                    <span>👾</span> <span>GameBridge (Oyun)</span>
-                </button>
-            </nav>
+            <div class="input-group">
+                <label id="lblRoomAction">Seçim edin</label>
+                <select id="roomAction" onchange="toggleSetupMode()">
+                    <option value="create" id="optCreate">Yeni Otaq Yarat (Host)</option>
+                    <option value="join" id="optJoin">Mövcud Otağa Qoşul (Peer)</option>
+                </select>
+            </div>
+
+            <div class="input-group" id="limitGroup">
+                <label id="lblLimit">Maksimum İştirakçı Sayı (Sizdən başqa)</label>
+                <select id="peerLimit">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="5">5</option>
+                </select>
+            </div>
+
+            <div class="input-group" id="roomKeyGroup" style="display: none;">
+                <label id="lblRoomKey">Otaq ID / Qoşulma Şifrəsi</label>
+                <input type="text" id="roomKeyInput" placeholder="Qarşı tərəfin kodunu bura yapışdırın...">
+            </div>
+
+            <button class="btn" id="btnAction" onclick="initializeP2P()">Otağı Başlat</button>
         </div>
 
-        <div class="mt-6 pt-4 border-t border-slate-800 text-xs text-slate-500">
-            <p>Müəllif: Fərid Hümbətzadə</p>
-            <p class="text-cyan-600 font-bold">Mesh Grid Engine Active</p>
-        </div>
-    </aside>
+        <!-- Əsas İşçi Sahəsi (Video və Siqnal Paneli) -->
+        <div class="workspace" id="mainWorkspace">
+            <div class="video-grid-container">
+                <div class="room-info-bar">
+                    <div>Status: <span id="statusBadge" class="status-badge">Yaradılır...</span></div>
+                    <div><span id="txtRoomLimitLabel">Otaq Limiti:</span> <span id="currentLimitDisplay" style="color:var(--accent-color); font-weight:bold;">-</span></div>
+                </div>
 
-    <main class="flex-grow p-4 md:p-8 flex flex-col justify-between">
-        <div class="max-w-4xl w-full mx-auto my-auto">
-            
-            <div id="mod-file" class="module-section space-y-4">
-                <h2 class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">📁 FileBridge — Limitsiz Fayl Ötürülməsi</h2>
-                <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl max-w-lg space-y-4">
-                    <div class="flex border-b border-slate-800 pb-3">
-                        <button id="file-tab-send" class="flex-1 text-center font-bold text-cyan-400" onclick="toggleFileTab('send')">Göndər</button>
-                        <button id="file-tab-recv" class="flex-1 text-center font-bold text-slate-400" onclick="toggleFileTab('recv')">Qəbul Et</button>
+                <div class="video-streams" id="videoGrid">
+                    <!-- Yerli Video -->
+                    <div class="video-wrapper local-stream">
+                        <video id="localVideo" autoplay playsinline muted></video>
+                        <div class="stream-labels" id="lblLocalVideo">Siz (Kamera)</div>
                     </div>
-                    <div id="file-send-area" class="space-y-4">
-                        <div id="drop-zone" class="border-2 border-dashed border-slate-700 hover:border-cyan-500 rounded-xl p-8 text-center cursor-pointer transition">
-                            <input type="file" id="file-input" class="hidden">
-                            <span id="file-label" class="text-sm text-slate-400">Faylı bura atın və ya klikləyin</span>
-                        </div>
-                        <button onclick="startHostingFile()" id="btn-file-host" class="w-full bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-bold py-3 rounded-xl transition">Kod Al</button>
-                        <div id="file-success" class="hidden bg-cyan-950/30 border border-cyan-800 p-4 rounded-xl text-center space-y-2">
-                            <p class="text-xs text-cyan-400 font-mono">Hazırdır! Qoşulma kodu:</p>
-                            <p id="file-code" class="text-4xl font-mono font-bold tracking-widest text-white animate-pulse">----</p>
-                        </div>
+                    <!-- Uzaq Video -->
+                    <div class="video-wrapper" id="remoteVideoWrapper" style="display: none;">
+                        <video id="remoteVideo" autoplay playsinline></video>
+                        <div class="stream-labels" id="lblRemoteVideo">Uzaq İstifadəçi</div>
                     </div>
-                    <div id="file-recv-area" class="hidden space-y-4">
-                        <input type="text" id="file-code-input" maxlength="4" placeholder="4 rəqəmli kod" class="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 text-center text-xl font-mono tracking-widest text-white">
-                        <button onclick="connectToDownload()" id="btn-file-dl" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 rounded-xl transition">Qoşul və Endir</button>
-                    </div>
+                </div>
+
+                <!-- Media İdarəetmə Düymələri -->
+                <div class="controls">
+                    <button class="control-btn" id="toggleMic" onclick="toggleAudio()" title="Mikrofon">🎤</button>
+                    <button class="control-btn" id="toggleCam" onclick="toggleVideo()" title="Kamera">📷</button>
+                    <button class="control-btn mued" id="leaveRoom" onclick="location.reload()" title="Çıxış" style="background:var(--danger)">❌</button>
                 </div>
             </div>
 
-            <div id="mod-cam" class="module-section hidden space-y-4">
-                <h2 class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-teal-500">📹 CamBridge — Çoxistifadəçili P2P Görüntülü Otaq</h2>
-                <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl space-y-4">
-                    <div class="flex flex-wrap gap-2 items-center">
-                        <button onclick="createCamRoom()" class="bg-teal-500 text-slate-950 px-4 py-2 rounded-xl font-bold text-xs transition">Otaq Yarat</button>
-                        <input type="text" id="cam-code-input" placeholder="Otaq Kodu" class="w-24 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-center text-xs text-white">
-                        <button onclick="joinCamRoom()" class="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-xl font-bold text-xs transition">Qoşul</button>
-                        <p id="cam-code-display" class="text-xs text-teal-400 font-mono hidden ml-auto">Otaq Kodu: <span class="text-white font-bold tracking-wider"></span></p>
-                    </div>
-                    <div id="video-grid" class="video-grid min-h-[200px] bg-slate-950 p-4 rounded-xl border border-slate-800">
-                        </div>
+            <!-- WebRTC Serverless Bağlantı Qurma Paneli -->
+            <div class="signal-panel">
+                <div class="panel-title" id="txtSignalTitle">P2P Siqnal Mübadiləsi</div>
+                <div class="signal-box" id="signalStatus">Sistem başladılır...</div>
+                
+                <div class="signal-input-area">
+                    <textarea id="signalDataOutput" readonly placeholder="Sizin siqnal kodunuz burada yaranacaq..."></textarea>
+                    <button class="signal-btn" id="btnCopySignal" onclick="copySignalCode()">Kodu Kopyala</button>
+                </div>
+
+                <div class="signal-input-area" style="margin-top: 15px;">
+                    <textarea id="signalDataInput" placeholder="Qarşı tərəfdən gələn cavab kodunu bura yapışdırın..."></textarea>
+                    <button class="signal-btn" id="btnConnectSignal" onclick="processInputSignal()">Bağlantını Tamayla</button>
                 </div>
             </div>
-
-            <div id="mod-screen" class="module-section hidden space-y-4">
-                <h2 class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-500">📺 ScreenBridge — Canlı Ekran Yayımı</h2>
-                <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl max-w-lg space-y-4">
-                    <div class="flex border-b border-slate-800 pb-3">
-                        <button id="screen-tab-send" class="flex-1 text-center font-bold text-teal-400" onclick="toggleScreenTab('send')">Yayımla</button>
-                        <button id="screen-tab-recv" class="flex-1 text-center font-bold text-slate-400" onclick="toggleScreenTab('recv')">İzlə</button>
-                    </div>
-                    <div id="screen-send-area" class="space-y-4">
-                        <button onclick="startScreenShare()" id="btn-screen-host" class="w-full bg-teal-500 hover:bg-teal-600 text-slate-950 font-bold py-3 rounded-xl transition">Ekranı Paylaş və Kod Al</button>
-                        <div id="screen-success" class="hidden bg-teal-950/30 border border-teal-800 p-4 rounded-xl text-center space-y-2">
-                            <p class="text-xs text-teal-400 font-mono">Qorunan yayım kodu:</p>
-                            <p id="screen-code" class="text-4xl font-mono font-bold tracking-widest text-white animate-pulse">----</p>
-                        </div>
-                    </div>
-                    <div id="screen-recv-area" class="hidden space-y-4">
-                        <input type="text" id="screen-code-input" maxlength="4" placeholder="4 rəqəmli kod" class="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 text-center text-xl font-mono tracking-widest text-white">
-                        <button onclick="connectToScreen()" id="btn-screen-watch" class="w-full bg-teal-500 hover:bg-teal-600 text-slate-950 font-bold py-3 rounded-xl transition">Canlı İzlə</button>
-                        <video id="remote-video" autoplay playsinline class="w-full rounded-xl border border-slate-800 hidden mt-4"></video>
-                    </div>
-                </div>
-            </div>
-
-            <div id="mod-voice" class="module-section hidden space-y-4">
-                <h2 class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">🎙️ VoiceBridge — P2P Gizli Telsiz</h2>
-                <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl max-w-lg space-y-4">
-                    <div class="flex border-b border-slate-800 pb-3">
-                        <button id="voice-tab-host" class="flex-1 text-center font-bold text-purple-400" onclick="toggleVoiceTab('host')">Otaq Yarat</button>
-                        <button id="voice-tab-join" class="flex-1 text-center font-bold text-slate-400" onclick="toggleVoiceTab('join')">Qoşul</button>
-                    </div>
-                    <div id="voice-host-area" class="space-y-4">
-                        <button onclick="startVoiceRoom()" id="btn-voice-host" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 rounded-xl transition">Mikrofonu Aç və Otaq Yarat</button>
-                        <div id="voice-success" class="hidden bg-purple-950/30 border border-purple-800 p-4 rounded-xl text-center space-y-2">
-                            <p class="text-xs text-purple-400 font-mono">Telsiz tezlik kodu:</p>
-                            <p id="voice-code" class="text-4xl font-mono font-bold tracking-widest text-white animate-pulse">----</p>
-                        </div>
-                    </div>
-                    <div id="voice-join-area" class="hidden space-y-4">
-                        <input type="text" id="voice-code-input" maxlength="4" placeholder="4 rəqəmli kod" class="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 text-center text-xl font-mono tracking-widest text-white">
-                        <button onclick="connectToVoice()" id="btn-voice-join" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 rounded-xl transition">Səsli Kanala Qoşul</button>
-                    </div>
-                    <audio id="remote-audio" autoplay class="hidden"></audio>
-                </div>
-            </div>
-
-            <div id="mod-note" class="module-section hidden space-y-4">
-                <h2 class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-500">🔐 NoteCrypt — Şifrəli Qeyd Paylaşımı</h2>
-                <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl max-w-lg space-y-4">
-                    <div class="flex border-b border-slate-800 pb-3">
-                        <button id="note-tab-create" class="flex-1 text-center font-bold text-orange-400" onclick="toggleNoteTab('create')">Qeyd Yaz</button>
-                        <button id="note-tab-read" class="flex-1 text-center font-bold text-slate-400" onclick="toggleNoteTab('read')">Qeyd Oxu</button>
-                    </div>
-                    <div id="note-create-area" class="space-y-4">
-                        <textarea id="note-text" placeholder="Gizli qeydinizi bura yazın..." class="w-full h-24 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm focus:outline-none focus:border-orange-500 text-white"></textarea>
-                        <button onclick="shareEncryptedNote()" id="btn-note-host" class="w-full bg-orange-500 hover:bg-orange-600 text-slate-950 font-bold py-3 rounded-xl transition">Şifrələ və Kod Al</button>
-                        <div id="note-success" class="hidden bg-orange-950/30 border border-orange-800 p-4 rounded-xl text-center space-y-2">
-                            <p class="text-xs text-orange-400 font-mono">Qeyd kodu:</p>
-                            <p id="note-code" class="text-4xl font-mono font-bold tracking-widest text-white animate-pulse">----</p>
-                        </div>
-                    </div>
-                    <div id="note-read-area" class="hidden space-y-4">
-                        <input type="text" id="note-code-input" maxlength="4" placeholder="4 rəqəmli kod" class="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 text-center text-xl font-mono tracking-widest text-white">
-                        <button onclick="readEncryptedNote()" id="btn-note-read" class="w-full bg-orange-500 hover:bg-orange-600 text-slate-950 font-bold py-3 rounded-xl transition">Qeydi Şifrədən Çıxar</button>
-                        <div id="decrypted-box" class="hidden bg-slate-950 border border-slate-800 p-4 rounded-xl text-sm text-amber-200 whitespace-pre-wrap"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="mod-chat" class="module-section hidden space-y-4">
-                <h2 class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-rose-500">💬 ChatBridge — Multi-User Mesh Çat</h2>
-                <div class="bg-slate-900/50 border border-slate-800 p-4 rounded-2xl max-w-lg space-y-4 flex flex-col h-[400px]">
-                    <div id="chat-auth" class="space-y-4 my-auto">
-                        <div class="flex space-x-2">
-                            <button onclick="startChat()" class="flex-1 bg-pink-600 hover:bg-pink-700 text-white py-3 rounded-xl font-bold transition">Otaq Yarat</button>
-                            <input type="text" id="chat-code-input" placeholder="Kod yaz" class="w-24 bg-slate-950 border border-slate-800 rounded-xl py-3 text-center text-white">
-                            <button onclick="joinChat()" class="bg-slate-800 hover:bg-slate-700 text-white px-4 rounded-xl font-bold transition">Qoşul</button>
-                        </div>
-                        <p id="chat-my-code" class="text-xs text-center text-pink-400 font-mono hidden">Otaq kodu: <span class="text-white font-bold tracking-widest text-sm"></span></p>
-                    </div>
-                    
-                    <div id="chat-box" class="hidden flex-grow flex flex-col justify-between overflow-hidden">
-                        <div id="chat-messages" class="flex-grow overflow-y-auto space-y-2 p-2 border border-slate-800 rounded-xl mb-2 text-sm max-h-[250px]"></div>
-                        <div class="flex space-x-2">
-                            <input type="text" id="chat-input" placeholder="Mesaj yazın..." class="flex-grow bg-slate-950 border border-slate-800 rounded-xl px-3 text-sm focus:outline-none focus:border-pink-500 text-white">
-                            <button onclick="sendChatMessage()" class="bg-pink-600 text-white px-4 py-2 rounded-xl text-sm font-bold">Göndər</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="mod-board" class="module-section hidden space-y-4">
-                <h2 class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">🎨 BoardBridge — Multi-User Ortaq Lövhə</h2>
-                <div class="bg-slate-900/50 border border-slate-800 p-4 rounded-2xl space-y-4">
-                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
-                        <div class="flex space-x-2">
-                            <button onclick="startBoard()" class="bg-yellow-500 text-slate-950 px-3 py-1.5 rounded-lg text-xs font-bold">Lövhəni Aç</button>
-                            <input type="text" id="board-code-input" placeholder="Otaq Kodu" class="w-20 bg-slate-950 border border-slate-800 rounded-lg text-center text-xs text-white">
-                            <button onclick="joinBoard()" class="bg-slate-800 px-3 py-1.5 rounded-lg text-xs font-bold text-white">Qoşul</button>
-                        </div>
-                        <p id="board-code-display" class="text-xs text-yellow-400 font-mono hidden">Kod: <span class="text-white font-bold"></span></p>
-                        <div class="flex space-x-2">
-                            <input type="color" id="board-color" value="#e2e8f0" class="w-6 h-6 rounded cursor-pointer bg-transparent border-0">
-                            <button onclick="clearBoard()" class="bg-red-950 border border-red-800 text-red-400 px-2.5 py-1 rounded-lg text-xs">Təmizlə</button>
-                        </div>
-                    </div>
-                    <canvas id="whiteboard" class="w-full h-80 bg-slate-950 rounded-xl border border-slate-800 cursor-crosshair"></canvas>
-                </div>
-            </div>
-
-            <div id="mod-game" class="module-section hidden space-y-4">
-                <h2 class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500">👾 GameBridge — P2P Space Fight</h2>
-                <div class="bg-slate-900/50 border border-slate-800 p-4 rounded-2xl space-y-4 text-center">
-                    <div class="flex justify-center space-x-2 mb-2">
-                        <button onclick="hostGame()" class="bg-blue-600 px-4 py-1.5 rounded-lg text-xs font-bold text-white">Oyun Yarat</button>
-                        <input type="text" id="game-code-input" placeholder="Kod yaz" class="w-20 bg-slate-950 border border-slate-800 text-center text-xs text-white rounded-lg">
-                        <button onclick="joinGame()" class="bg-indigo-600 px-4 py-1.5 rounded-lg text-xs font-bold text-white">Qoşul</button>
-                    </div>
-                    <p id="game-code-display" class="text-xs text-blue-400 font-mono mb-2 hidden">Oyun Kodu: <span class="text-white font-bold"></span></p>
-                    <canvas id="game-canvas" width="600" height="300" class="mx-auto bg-black rounded-xl border border-slate-800 hidden"></canvas>
-                    <div id="game-controls" class="hidden text-slate-500 text-xs mt-2">
-                        🎮 İdarəetmə: <strong class="text-white">W / S</strong> (Yuxarı/Aşağı), <strong class="text-white">Space</strong> (Atəş)
-                    </div>
-                </div>
-            </div>
-
         </div>
     </main>
 
     <script>
-        let peer = null;
-        let connections = []; // Mesh network üçün bütün bağlantıların siyahısı
-        let myStream = null;
-        let peerPrefix = ""; 
+        // Multi-Language Dictionary
+        const languages = {
+            az: {
+                setupTitle: "Otaq Yaradın və ya Qoşulun",
+                roomAction: "Seçim edin",
+                optCreate: "Yeni Otaq Yarat (Host)",
+                optJoin: "Mövcud Otağa Qoşul (Peer)",
+                limit: "Maksimum İştirakçı Sayı (Sizdən başqa)",
+                roomKey: "Otaq ID / Qoşulma Şifrəsi",
+                btnStart: "Otağı Başlat",
+                btnJoin: "Otağa Qoşul",
+                localVideo: "Siz (Kamera)",
+                remoteVideo: "Uzaq İstifadəçi",
+                signalTitle: "P2P Siqnal Mübadiləsi",
+                statusWaiting: "Qarşı tərəfin qoşulması gözlənilir...",
+                statusConnected: "Qoşuldu",
+                statusDisconnected: "Bağlantı kəsildi",
+                copyBtn: "Kodu Kopyala",
+                connectBtn: "Bağlantını Tamayla",
+                roomLimit: "Otaq Limiti",
+                alertCopy: "Siqnal kodu panoya kopyalandı! Dostunuza göndərin.",
+                alertSignal: "Zəhmət olmasa siqnal kodunu daxil edin."
+            },
+            tr: {
+                setupTitle: "Oda Oluşturun veya Katılın",
+                roomAction: "Seçim yapın",
+                optCreate: "Yeni Oda Oluştur (Host)",
+                optJoin: "Mevcut Odaya Katıl (Peer)",
+                limit: "Maksimum Katılımcı Sayısı (Sizden hariç)",
+                roomKey: "Oda Kimliği / Bağlantı Şifresi",
+                btnStart: "Odayı Başlat",
+                btnJoin: "Odaya Katıl",
+                localVideo: "Siz (Kamera)",
+                remoteVideo: "Uzak Kullanıcı",
+                signalTitle: "P2P Sinyal Alışverişi",
+                statusWaiting: "Karşı tarafın bağlanması bekleniyor...",
+                statusConnected: "Bağlandı",
+                statusDisconnected: "Bağlantı Kesildi",
+                copyBtn: "Kodu Kopyala",
+                connectBtn: "Bağlantıyı Tamamla",
+                roomLimit: "Oda Limiti",
+                alertCopy: "Sinyal kodu panoya kopyalandı! Arkadaşınıza gönderin.",
+                alertSignal: "Lütfen sinyal kodunu girin."
+            },
+            en: {
+                setupTitle: "Create or Join a Room",
+                roomAction: "Choose Action",
+                optCreate: "Create New Room (Host)",
+                optJoin: "Join Existing Room (Peer)",
+                limit: "Maximum Participants (Excluding you)",
+                roomKey: "Room ID / Signal Key",
+                btnStart: "Start Room",
+                btnJoin: "Join Room",
+                localVideo: "You (Camera)",
+                remoteVideo: "Remote Peer",
+                signalTitle: "P2P Signaling Exchange",
+                statusWaiting: "Waiting for peer connection...",
+                statusConnected: "Connected",
+                statusDisconnected: "Disconnected",
+                copyBtn: "Copy Code",
+                connectBtn: "Complete Connection",
+                roomLimit: "Room Limit",
+                alertCopy: "Signal code copied to clipboard! Send it to your peer.",
+                alertSignal: "Please enter the signal code."
+            },
+            ru: {
+                setupTitle: "Создать или Войти в Комнату",
+                roomAction: "Выберите действие",
+                optCreate: "Создать комнату (Хост)",
+                optJoin: "Войти в комнату (Пир)",
+                limit: "Макс. участников (Кроме вас)",
+                roomKey: "ID Комнаты / Ключ Сигнала",
+                btnStart: "Запустить Комнату",
+                btnJoin: "Войти в Комнату",
+                localVideo: "Вы (Камера)",
+                remoteVideo: "Удаленный пользователь",
+                signalTitle: "P2P Обмен Сигналами",
+                statusWaiting: "Ожидание подключения пира...",
+                statusConnected: "Подключено",
+                statusDisconnected: "Отключено",
+                copyBtn: "Копировать код",
+                connectBtn: "Завершить соединение",
+                roomLimit: "Лимит комнаты",
+                alertCopy: "Сигнальный код скопирован! Отправьте его другу.",
+                alertSignal: "Пожалуйста, введите сигнальный код."
+            },
+            zh: {
+                setupTitle: "创建或加入房间",
+                roomAction: "选择操作",
+                optCreate: "创建新房间 (主方)",
+                optJoin: "加入现有房间 (客方)",
+                limit: "最大参与人数 (不 include 你)",
+                roomKey: "房间 ID / 信号密钥",
+                btnStart: "启动房间",
+                btnJoin: "加入房间",
+                localVideo: "您 (摄像头)",
+                remoteVideo: "远程用户",
+                signalTitle: "P2P 信号交换",
+                statusWaiting: "等待对端连接...",
+                statusConnected: "已连接",
+                statusDisconnected: "断开连接",
+                copyBtn: "复制专属代码",
+                connectBtn: "完成 P2P 连接",
+                roomLimit: "房间限制",
+                alertCopy: "信号代码已复制到剪贴板！请发送给朋友。",
+                alertSignal: "请输入有效的信号代码。"
+            }
+        };
 
-        // MODULE NAVIGATION
-        function switchModule(modName) {
-            document.querySelectorAll('.module-section').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.sidebar-btn').forEach(el => el.classList.remove('active'));
+        let currentLang = 'az';
+        let localStream;
+        let peerConnection;
+        let isHost = true;
 
-            document.getElementById(`mod-${modName}`).classList.remove('hidden');
-            document.getElementById(`btn-${modName}`).classList.add('active');
+        const configuration = {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ]
+        };
+
+        function switchLanguage(lang) {
+            currentLang = lang;
+            document.querySelectorAll('.flag-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Apply translations
+            document.getElementById('txtSetupTitle').innerText = languages[lang].setupTitle;
+            document.getElementById('lblRoomAction').innerText = languages[lang].roomAction;
+            document.getElementById('optCreate').innerText = languages[lang].optCreate;
+            document.getElementById('optJoin').innerText = languages[lang].optJoin;
+            document.getElementById('lblLimit').innerText = languages[lang].limit;
+            document.getElementById('lblRoomKey').innerText = languages[lang].roomKey;
             
-            stopStreams();
+            const actionBtn = document.getElementById('btnAction');
+            actionBtn.innerText = document.getElementById('roomAction').value === 'create' ? languages[lang].btnStart : languages[lang].btnJoin;
+
+            document.getElementById('lblLocalVideo').innerText = languages[lang].localVideo;
+            document.getElementById('lblRemoteVideo').innerText = languages[lang].remoteVideo;
+            document.getElementById('txtSignalTitle').innerText = languages[lang].signalTitle;
+            document.getElementById('btnCopySignal').innerText = languages[lang].copyBtn;
+            document.getElementById('btnConnectSignal').innerText = languages[lang].connectBtn;
+            document.getElementById('txtRoomLimitLabel').innerText = languages[lang].roomLimit;
         }
 
-        function stopStreams() {
-            if (myStream) {
-                myStream.getTracks().forEach(track => track.stop());
-                myStream = null;
+        function toggleSetupMode() {
+            const action = document.getElementById('roomAction').value;
+            const limitGroup = document.getElementById('limitGroup');
+            const roomKeyGroup = document.getElementById('roomKeyGroup');
+            const actionBtn = document.getElementById('btnAction');
+
+            if (action === 'create') {
+                isHost = true;
+                limitGroup.style.display = 'block';
+                roomKeyGroup.style.display = 'none';
+                actionBtn.innerText = languages[currentLang].btnStart;
+            } else {
+                isHost = false;
+                limitGroup.style.display = 'none';
+                roomKeyGroup.style.display = 'block';
+                actionBtn.innerText = languages[currentLang].btnJoin;
             }
-            connections.forEach(conn => conn.close());
-            connections = [];
-            if (peer) {
-                peer.destroy();
-                peer = null;
+        }
+
+        // Səs və Video On/Off Funksiyaları
+        function toggleAudio() {
+            const audioTrack = localStream.getAudioTracks()[0];
+            if (audioTrack) {
+                audioTrack.enabled = !audioTrack.enabled;
+                document.getElementById('toggleMic').classList.toggle('muted', !audioTrack.enabled);
+                document.getElementById('toggleMic').innerText = audioTrack.enabled ? "🎤" : "🔇";
             }
-            if (gameInterval) {
-                clearInterval(gameInterval);
+        }
+
+        function toggleVideo() {
+            const videoTrack = localStream.getVideoTracks()[0];
+            if (videoTrack) {
+                videoTrack.enabled = !videoTrack.enabled;
+                document.getElementById('toggleCam').classList.toggle('muted', !videoTrack.enabled);
+                document.getElementById('toggleCam').innerText = videoTrack.enabled ? "📷" : "🚫";
             }
-            document.getElementById('video-grid').innerHTML = '';
         }
 
-        function generateShortId() {
-            return Math.floor(1000 + Math.random() * 9000).toString();
-        }
+        // WebRTC P2P Əsas Struktur
+        async function initializeP2P() {
+            const limit = document.getElementById('peerLimit').value;
+            document.getElementById('currentLimitDisplay').innerText = isHost ? limit : "1";
 
-        // TABS TOGGLERS
-        function toggleFileTab(tab) {
-            document.getElementById('file-tab-send').className = tab === 'send' ? 'flex-1 text-center font-bold text-cyan-400' : 'flex-1 text-center font-bold text-slate-400';
-            document.getElementById('file-tab-recv').className = tab === 'recv' ? 'flex-1 text-center font-bold text-cyan-400' : 'flex-1 text-center font-bold text-slate-400';
-            document.getElementById('file-send-area').className = tab === 'send' ? 'space-y-4' : 'hidden';
-            document.getElementById('file-recv-area').className = tab === 'recv' ? 'space-y-4' : 'hidden';
-        }
-
-        function toggleScreenTab(tab) {
-            document.getElementById('screen-tab-send').className = tab === 'send' ? 'flex-1 text-center font-bold text-teal-400' : 'flex-1 text-center font-bold text-slate-400';
-            document.getElementById('screen-tab-recv').className = tab === 'recv' ? 'flex-1 text-center font-bold text-teal-400' : 'flex-1 text-center font-bold text-slate-400';
-            document.getElementById('screen-send-area').className = tab === 'send' ? 'space-y-4' : 'hidden';
-            document.getElementById('screen-recv-area').className = tab === 'recv' ? 'space-y-4' : 'hidden';
-        }
-
-        function toggleVoiceTab(tab) {
-            document.getElementById('voice-tab-host').className = tab === 'host' ? 'flex-1 text-center font-bold text-purple-400' : 'flex-1 text-center font-bold text-slate-400';
-            document.getElementById('voice-tab-join').className = tab === 'join' ? 'flex-1 text-center font-bold text-purple-400' : 'flex-1 text-center font-bold text-slate-400';
-            document.getElementById('voice-host-area').className = tab === 'host' ? 'space-y-4' : 'hidden';
-            document.getElementById('voice-join-area').className = tab === 'join' ? 'space-y-4' : 'hidden';
-        }
-
-        function toggleNoteTab(tab) {
-            document.getElementById('note-tab-create').className = tab === 'create' ? 'flex-1 text-center font-bold text-orange-400' : 'flex-1 text-center font-bold text-slate-400';
-            document.getElementById('note-tab-read').className = tab === 'read' ? 'flex-1 text-center font-bold text-orange-400' : 'flex-1 text-center font-bold text-slate-400';
-            document.getElementById('note-create-area').className = tab === 'create' ? 'space-y-4' : 'hidden';
-            document.getElementById('note-read-area').className = tab === 'read' ? 'space-y-4' : 'hidden';
-        }
-
-        // ==================== 1. FILEBRIDGE ====================
-        let selectedFile = null;
-        const dropZone = document.getElementById('drop-zone');
-        const fileInput = document.getElementById('file-input');
-        const fileLabel = document.getElementById('file-label');
-
-        dropZone.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', () => {
-            if (fileInput.files.length > 0) {
-                selectedFile = fileInput.files[0];
-                fileLabel.innerText = selectedFile.name;
-            }
-        });
-
-        function startHostingFile() {
-            if (!selectedFile) { alert("Fayl seçin!"); return; }
-            const shortId = generateShortId();
-            peer = new Peer("fbridge-" + shortId);
-            peer.on('open', () => {
-                document.getElementById('file-code').innerText = shortId;
-                document.getElementById('file-success').classList.remove('hidden');
-            });
-            peer.on('connection', (connection) => {
-                connections.push(connection);
-                connection.on('open', () => {
-                    connection.send({ file: selectedFile, name: selectedFile.name, type: selectedFile.type });
-                });
-            });
-        }
-
-        function connectToDownload() {
-            const code = document.getElementById('file-code-input').value.trim();
-            peer = new Peer();
-            peer.on('open', () => {
-                const conn = peer.connect("fbridge-" + code);
-                conn.on('data', (data) => {
-                    const blob = new Blob([data.file], { type: data.type });
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(blob);
-                    link.download = data.name;
-                    link.click();
-                    alert("Fayl uğurla endirildi!");
-                });
-            });
-        }
-
-        // ==================== CAMBRIDGE (MULTIPLE PEER VIDEO CHAT) ====================
-        let myId = "";
-        let peersInRoom = [];
-
-        async function createCamRoom() {
-            const shortId = generateShortId();
-            setupCamPeer(shortId, true);
-        }
-
-        async function joinCamRoom() {
-            const code = document.getElementById('cam-code-input').value.trim();
-            setupCamPeer(code, false);
-        }
-
-        async function setupCamPeer(roomCode, isHost) {
+            // Kamera və mikrofona icazə alırıq
             try {
-                myStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                addVideoFeed(myStream, "Sən (Kamera)", true);
-
-                myId = isHost ? "cam-" + roomCode : "cam-" + roomCode + "-" + generateShortId();
-                peer = new Peer(myId);
-
-                peer.on('open', (id) => {
-                    const display = document.getElementById('cam-code-display');
-                    display.querySelector('span').innerText = roomCode;
-                    display.classList.remove('hidden');
-
-                    if (!isHost) {
-                        // Host-a qoşulur və özünü təqdim edir
-                        const hostConn = peer.connect("cam-" + roomCode);
-                        hostConn.on('open', () => {
-                            hostConn.send({ type: 'join', peerId: myId });
-                        });
-                    }
-                });
-
-                peer.on('connection', (connection) => {
-                    connection.on('data', (data) => {
-                        if (data.type === 'join') {
-                            // Yeni qoşulana zəng edirik
-                            const call = peer.call(data.peerId, myStream);
-                            call.on('stream', (userStream) => {
-                                addVideoFeed(userStream, "İstifadəçi");
-                            });
-
-                            // Host yeni gələnin idsini otaqdakı hər kəsə yayır (Mesh Grid)
-                            if (isHost) {
-                                peersInRoom.push(data.peerId);
-                                connections.forEach(c => {
-                                    c.send({ type: 'new-peer', peerId: data.peerId });
-                                });
-                            }
-                        }
-                        if (data.type === 'new-peer') {
-                            // Yeni gələn mesh peer-ə qoşuluruq
-                            const call = peer.call(data.peerId, myStream);
-                            call.on('stream', (userStream) => {
-                                addVideoFeed(userStream, "İstifadəçi");
-                            });
-                        }
-                    });
-                    connections.push(connection);
-                });
-
-                peer.on('call', (call) => {
-                    call.answer(myStream);
-                    call.on('stream', (remoteStream) => {
-                        addVideoFeed(remoteStream, "İstifadəçi");
-                    });
-                });
-
+                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                document.getElementById('localVideo').srcObject = localStream;
             } catch (err) {
-                alert("Kamera və mikrofona icazə verilmədi!");
-                console.error(err);
+                alert("Kamera və ya mikrofona giriş icazəsi verilmədi!");
+                return;
+            }
+
+            // Ekran dəyişikliyi
+            document.getElementById('setupPanel').style.display = 'none';
+            document.getElementById('mainWorkspace').style.display = 'grid';
+
+            peerConnection = new RTCPeerConnection(configuration);
+
+            // Streami əlavə edirik
+            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+            // Qarşı tərəfdən gələn axını tuturuq
+            peerConnection.ontrack = event => {
+                document.getElementById('remoteVideoWrapper').style.display = 'block';
+                document.getElementById('remoteVideo').srcObject = event.streams[0];
+                updateStatus(languages[currentLang].statusConnected, true);
+            };
+
+            peerConnection.onicecandidate = event => {
+                if (event.candidate == null) {
+                    // Bütün ICE namizədlər toplandıqdan sonra tam SDP JSON kodunu çıxarırıq
+                    document.getElementById('signalDataOutput').value = JSON.stringify(peerConnection.localDescription);
+                }
+            };
+
+            if (isHost) {
+                updateStatus(languages[currentLang].statusWaiting, false);
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+            } else {
+                updateStatus("Aktivləşdirilir...", false);
+                // Peer rejmində birbaşa hostun kodunu inputdan oxuya bilərik
+                const hostSignal = document.getElementById('roomKeyInput').value;
+                if(hostSignal) {
+                    document.getElementById('signalDataInput').value = hostSignal;
+                }
             }
         }
 
-        function addVideoFeed(stream, labelText, isMuted = false) {
-            const grid = document.getElementById('video-grid');
-            
-            // Əgər video artıq mövcuddursa, təkrar yaratmayaq
-            const existing = Array.from(grid.querySelectorAll('video')).find(v => v.srcObject && v.srcObject.id === stream.id);
-            if (existing) return;
+        async function processInputSignal() {
+            const signalText = document.getElementById('signalDataInput').value;
+            if (!signalText) {
+                alert(languages[currentLang].alertSignal);
+                return;
+            }
 
-            const container = document.createElement('div');
-            container.className = "relative bg-slate-900 rounded-xl overflow-hidden border border-slate-800";
+            const signal = JSON.parse(signalText);
 
-            const video = document.createElement('video');
-            video.srcObject = stream;
-            video.autoplay = true;
-            video.playsInline = true;
-            if (isMuted) video.muted = true;
-            video.className = "w-full h-full object-cover rounded-xl aspect-video";
-
-            const badge = document.createElement('span');
-            badge.className = "absolute bottom-2 left-2 bg-slate-950/80 text-xxs px-2 py-1 rounded text-cyan-400 font-bold";
-            badge.innerText = labelText;
-
-            container.appendChild(video);
-            container.appendChild(badge);
-            grid.appendChild(container);
-        }
-
-        // ==================== 2. SCREENBRIDGE ====================
-        async function startScreenShare() {
-            try {
-                myStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-                const shortId = generateShortId();
-                peer = new Peer("sbridge-" + shortId);
-                peer.on('open', () => {
-                    document.getElementById('screen-code').innerText = shortId;
-                    document.getElementById('screen-success').classList.remove('hidden');
-                });
-                peer.on('call', (call) => { call.answer(myStream); });
-            } catch (err) { alert("Ekran paylaşıla bilmədi."); }
-        }
-
-        function connectToScreen() {
-            const code = document.getElementById('screen-code-input').value.trim();
-            peer = new Peer();
-            peer.on('open', () => {
-                const call = peer.call("sbridge-" + code, new MediaStream());
-                call.on('stream', (remoteStream) => {
-                    const video = document.getElementById('remote-video');
-                    video.srcObject = remoteStream;
-                    video.classList.remove('hidden');
-                });
-            });
-        }
-
-        // ==================== 3. VOICEBRIDGE ====================
-        async function startVoiceRoom() {
-            try {
-                myStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                const shortId = generateShortId();
-                peer = new Peer("vbridge-" + shortId);
-                peer.on('open', () => {
-                    document.getElementById('voice-code').innerText = shortId;
-                    document.getElementById('voice-success').classList.remove('hidden');
-                });
-                peer.on('call', (call) => {
-                    call.answer(myStream);
-                    call.on('stream', (remoteStream) => {
-                        document.getElementById('remote-audio').srcObject = remoteStream;
-                    });
-                });
-            } catch (err) { alert("Mikrofona icazə rədd edildi."); }
-        }
-
-        async function connectToVoice() {
-            const code = document.getElementById('voice-code-input').value.trim();
-            try {
-                myStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                peer = new Peer();
-                peer.on('open', () => {
-                    const call = peer.call("vbridge-" + code, myStream);
-                    call.on('stream', (remoteStream) => {
-                        document.getElementById('remote-audio').srcObject = remoteStream;
-                        alert("Qoşuldu!");
-                    });
-                });
-            } catch (err) { alert("Mikrofon xətası."); }
-        }
-
-        // ==================== 4. NOTECRYPT ====================
-        function shareEncryptedNote() {
-            const noteText = document.getElementById('note-text').value.trim();
-            if (!noteText) { alert("Mətn yazın!"); return; }
-            const shortId = generateShortId();
-            peer = new Peer("nbridge-" + shortId);
-            peer.on('open', () => {
-                document.getElementById('note-code').innerText = shortId;
-                document.getElementById('note-success').classList.remove('hidden');
-            });
-            peer.on('connection', (connection) => {
-                connections.push(connection);
-                connection.on('open', () => { connection.send({ text: noteText }); });
-            });
-        }
-
-        function readEncryptedNote() {
-            const code = document.getElementById('note-code-input').value.trim();
-            peer = new Peer();
-            peer.on('open', () => {
-                const conn = peer.connect("nbridge-" + code);
-                conn.on('data', (data) => {
-                    const box = document.getElementById('decrypted-box');
-                    box.innerText = data.text;
-                    box.classList.remove('hidden');
-                });
-            });
-        }
-
-        // ==================== 5. CHATBRIDGE (MESH MULTI-USER CHAT) ====================
-        function startChat() {
-            const shortId = generateShortId();
-            setupChatPeer(shortId, true);
-        }
-
-        function joinChat() {
-            const code = document.getElementById('chat-code-input').value.trim();
-            setupChatPeer(code, false);
-        }
-
-        function setupChatPeer(roomCode, isHost) {
-            myId = isHost ? "chat-" + roomCode : "chat-" + roomCode + "-" + generateShortId();
-            peer = new Peer(myId);
-
-            peer.on('open', () => {
-                document.getElementById('chat-auth').classList.add('hidden');
-                document.getElementById('chat-box').classList.remove('hidden');
-                
-                const display = document.getElementById('chat-my-code');
-                display.querySelector('span').innerText = roomCode;
-                display.classList.remove('hidden');
-
-                if (!isHost) {
-                    const hostConn = peer.connect("chat-" + roomCode);
-                    hostConn.on('open', () => {
-                        hostConn.send({ type: 'join', peerId: myId });
-                    });
-                    connections.push(hostConn);
-                    setupChatEvents(hostConn);
-                }
-            });
-
-            peer.on('connection', (connection) => {
-                connections.push(connection);
-                setupChatEvents(connection, isHost);
-            });
-        }
-
-        function setupChatEvents(connection, isHost) {
-            connection.on('data', (data) => {
-                if (data.type === 'join' && isHost) {
-                    // Host bütün digər qoşulmuş insanlara yeni peer-i xəbər verir
-                    connections.forEach(c => {
-                        if (c.peer !== data.peerId) {
-                            c.send({ type: 'new-peer', peerId: data.peerId });
-                        }
-                    });
-                    // Yeni qoşulan üçün data kanalı açılır
-                    const newConn = peer.connect(data.peerId);
-                    connections.push(newConn);
-                    setupChatEvents(newConn, false);
-                }
-                if (data.type === 'new-peer') {
-                    const newConn = peer.connect(data.peerId);
-                    connections.push(newConn);
-                    setupChatEvents(newConn, false);
-                }
-                if (data.chat) {
-                    appendChatMessage(data.chat, 'partner');
-                    // Host-dursa mesajı hamıya yayır
-                    if (isHost) {
-                        connections.forEach(c => {
-                            if (c.peer !== connection.peer) c.send({ chat: data.chat });
-                        });
-                    }
-                }
-            });
-        }
-
-        function sendChatMessage() {
-            const input = document.getElementById('chat-input');
-            const val = input.value.trim();
-            if (!val) return;
-            
-            connections.forEach(c => {
-                if (c.open) c.send({ chat: val });
-            });
-
-            appendChatMessage(val, 'me');
-            input.value = '';
-        }
-
-        function appendChatMessage(text, sender) {
-            const box = document.getElementById('chat-messages');
-            const wrapper = document.createElement('div');
-            wrapper.className = sender === 'me' ? 'text-right' : 'text-left';
-            const msg = document.createElement('span');
-            msg.className = sender === 'me' ? 'inline-block bg-pink-600 text-white rounded-lg px-3 py-1.5 max-w-xs' : 'inline-block bg-slate-800 text-slate-100 rounded-lg px-3 py-1.5 max-w-xs';
-            msg.innerText = text;
-            wrapper.appendChild(msg);
-            box.appendChild(wrapper);
-            box.scrollTop = box.scrollHeight;
-        }
-
-        // ==================== 6. BOARDBRIDGE (MULTI-USER BOARD) ====================
-        const canvas = document.getElementById('whiteboard');
-        const ctx = canvas.getContext('2d');
-        let drawing = false;
-
-        function resizeCanvas() {
-            canvas.width = canvas.parentElement.clientWidth;
-            canvas.height = 320;
-            ctx.lineCap = 'round';
-            ctx.lineWidth = 3;
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-
-        function startBoard() {
-            const shortId = generateShortId();
-            setupBoardPeer(shortId, true);
-        }
-
-        function joinBoard() {
-            const code = document.getElementById('board-code-input').value.trim();
-            setupBoardPeer(code, false);
-        }
-
-        function setupBoardPeer(roomCode, isHost) {
-            myId = isHost ? "board-" + roomCode : "board-" + roomCode + "-" + generateShortId();
-            peer = new Peer(myId);
-
-            peer.on('open', () => {
-                const d = document.getElementById('board-code-display');
-                d.querySelector('span').innerText = roomCode;
-                d.classList.remove('hidden');
-
-                if (!isHost) {
-                    const hostConn = peer.connect("board-" + roomCode);
-                    hostConn.on('open', () => {
-                        hostConn.send({ type: 'join', peerId: myId });
-                    });
-                    connections.push(hostConn);
-                    setupBoardEvents(hostConn);
-                }
-            });
-
-            peer.on('connection', (connection) => {
-                connections.push(connection);
-                setupBoardEvents(connection, isHost);
-            });
-        }
-
-        function setupBoardEvents(connection, isHost) {
-            connection.on('data', (data) => {
-                if (data.type === 'join' && isHost) {
-                    connections.forEach(c => {
-                        if (c.peer !== data.peerId) c.send({ type: 'new-peer', peerId: data.peerId });
-                    });
-                    const newConn = peer.connect(data.peerId);
-                    connections.push(newConn);
-                    setupBoardEvents(newConn, false);
-                }
-                if (data.type === 'new-peer') {
-                    const newConn = peer.connect(data.peerId);
-                    connections.push(newConn);
-                    setupBoardEvents(newConn, false);
-                }
-                if (data.draw) {
-                    drawLine(data.draw.x0, data.draw.y0, data.draw.x1, data.draw.y1, data.draw.color, false);
-                    if (isHost) {
-                        connections.forEach(c => {
-                            if (c.peer !== connection.peer) c.send({ draw: data.draw });
-                        });
-                    }
-                }
-                if (data.clear) {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    if (isHost) {
-                        connections.forEach(c => {
-                            if (c.peer !== connection.peer) c.send({ clear: true });
-                        });
-                    }
-                }
-            });
-        }
-
-        let lastX = 0, lastY = 0;
-        canvas.addEventListener('mousedown', (e) => { drawing = true; [lastX, lastY] = [e.offsetX, e.offsetY]; });
-        canvas.addEventListener('mouseup', () => drawing = false);
-        canvas.addEventListener('mousemove', (e) => {
-            if (!drawing) return;
-            const color = document.getElementById('board-color').value;
-            drawLine(lastX, lastY, e.offsetX, e.offsetY, color, true);
-            [lastX, lastY] = [e.offsetX, e.offsetY];
-        });
-
-        canvas.addEventListener('touchstart', (e) => {
-            drawing = true;
-            const t = e.touches[0];
-            const rect = canvas.getBoundingClientRect();
-            [lastX, lastY] = [t.clientX - rect.left, t.clientY - rect.top];
-        });
-        canvas.addEventListener('touchend', () => drawing = false);
-        canvas.addEventListener('touchmove', (e) => {
-            if (!drawing) return;
-            const t = e.touches[0];
-            const rect = canvas.getBoundingClientRect();
-            const color = document.getElementById('board-color').value;
-            drawLine(lastX, lastY, t.clientX - rect.left, t.clientY - rect.top, color, true);
-            [lastX, lastY] = [t.clientX - rect.left, t.clientY - rect.top];
-        });
-
-        function drawLine(x0, y0, x1, y1, color, sync) {
-            ctx.beginPath();
-            ctx.strokeStyle = color;
-            ctx.moveTo(x0, y0);
-            ctx.lineTo(x1, y1);
-            ctx.stroke();
-            if (sync && connections.length > 0) {
-                connections.forEach(c => {
-                    if (c.open) c.send({ draw: { x0, y0, x1, y1, color } });
-                });
+            if (isHost) {
+                // Host qarşı tərəfin cavabını (Answer) qəbul edir
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(signal));
+            } else {
+                // Peer hostun təklifini (Offer) qəbul edir və cavab hazırlayır
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(signal));
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                document.getElementById('signalDataOutput').value = JSON.stringify(peerConnection.localDescription);
             }
         }
 
-        function clearBoard() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            connections.forEach(c => {
-                if (c.open) c.send({ clear: true });
-            });
-        }
-
-        // ==================== 7. GAMEBRIDGE ====================
-        const gCanvas = document.getElementById('game-canvas');
-        const gCtx = gCanvas.getContext('2d');
-        let gameInterval = null;
-        let localPlayer = { y: 130, score: 0 };
-        let remotePlayer = { y: 130, score: 0 };
-        let ball = { x: 300, y: 150, vx: 4, vy: 4 };
-        let isGameHost = false;
-
-        function hostGame() {
-            const shortId = generateShortId();
-            peer = new Peer("gbridge-" + shortId);
-            isGameHost = true;
-            peer.on('open', () => {
-                const d = document.getElementById('game-code-display');
-                d.querySelector('span').innerText = shortId;
-                d.classList.remove('hidden');
-            });
-            peer.on('connection', (connection) => {
-                connections.push(connection);
-                startGameLoop();
-            });
-        }
-
-        function joinGame() {
-            const code = document.getElementById('game-code-input').value.trim();
-            peer = new Peer();
-            isGameHost = false;
-            peer.on('open', () => {
-                const conn = peer.connect("gbridge-" + code);
-                connections.push(conn);
-                startGameLoop();
-            });
-        }
-
-        function startGameLoop() {
-            gCanvas.classList.remove('hidden');
-            document.getElementById('game-controls').classList.remove('hidden');
-            
-            connections.forEach(conn => {
-                conn.on('data', (data) => {
-                    if (data.y !== undefined) remotePlayer.y = data.y;
-                    if (data.ball !== undefined) { ball = data.ball; }
-                    if (data.score !== undefined) { localPlayer.score = data.score.r; remotePlayer.score = data.score.l; }
-                });
-            });
-
-            window.addEventListener('keydown', (e) => {
-                if (e.key === 'w' || e.key === 'W') { localPlayer.y = Math.max(0, localPlayer.y - 15); syncGame(); }
-                if (e.key === 's' || e.key === 'S') { localPlayer.y = Math.min(240, localPlayer.y + 15); syncGame(); }
-            });
-
-            gameInterval = setInterval(updateGame, 1000/60);
-        }
-
-        function syncGame() {
-            connections.forEach(c => {
-                if (c.open) c.send({ y: localPlayer.y });
-            });
-        }
-
-        function updateGame() {
-            if (isGameHost) {
-                ball.x += ball.vx;
-                ball.y += ball.vy;
-
-                if (ball.y < 0 || ball.y > 290) ball.vy = -ball.vy;
-
-                if (ball.x < 20 && ball.y > localPlayer.y && ball.y < localPlayer.y + 60) { ball.vx = -ball.vx; }
-                if (ball.x > 570 && ball.y > remotePlayer.y && ball.y < remotePlayer.y + 60) { ball.vx = -ball.vx; }
-
-                if (ball.x < 0) { remotePlayer.score++; resetBall(); }
-                if (ball.x > 600) { localPlayer.score++; resetBall(); }
-
-                connections.forEach(c => {
-                    if (c.open) c.send({ ball: ball, score: { l: localPlayer.score, r: remotePlayer.score } });
-                });
+        function updateStatus(text, isConnected) {
+            const badge = document.getElementById('statusBadge');
+            const statusBox = document.getElementById('signalStatus');
+            badge.innerText = text;
+            statusBox.innerText = text;
+            if(isConnected) {
+                badge.classList.add('connected');
+            } else {
+                badge.classList.remove('connected');
             }
-            drawGame();
         }
 
-        function resetBall() {
-            ball.x = 300; ball.y = 150;
-            ball.vx = -ball.vx;
-        }
-
-        function drawGame() {
-            gCtx.fillStyle = '#000';
-            gCtx.fillRect(0, 0, 600, 300);
-
-            gCtx.strokeStyle = '#334155';
-            gCtx.setLineDash([5, 15]);
-            gCtx.beginPath(); gCtx.moveTo(300, 0); gCtx.lineTo(300, 300); gCtx.stroke();
-
-            gCtx.fillStyle = '#22d3ee';
-            gCtx.fillRect(10, isGameHost ? localPlayer.y : remotePlayer.y, 10, 60);
-
-            gCtx.fillStyle = '#818cf8';
-            gCtx.fillRect(580, isGameHost ? remotePlayer.y : localPlayer.y, 10, 60);
-
-            gCtx.fillStyle = '#f43f5e';
-            gCtx.beginPath(); gCtx.arc(ball.x, ball.y, 6, 0, Math.PI*2); gCtx.fill();
-
-            gCtx.fillStyle = '#fff';
-            gCtx.font = '20px monospace';
-            gCtx.fillText(isGameHost ? localPlayer.score : remotePlayer.score, 250, 40);
-            gCtx.fillText(isGameHost ? remotePlayer.score : localPlayer.score, 330, 40);
+        function copySignalCode() {
+            const copyText = document.getElementById('signalDataOutput');
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(copyText.value);
+            alert(languages[currentLang].alertCopy);
         }
     </script>
 </body>
