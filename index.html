@@ -41,7 +41,7 @@
     <!-- CORE DESKTOP VIEWPORT -->
     <div class="flex-1 flex min-h-0 w-full relative">
         
-        <!-- STEP 1: LEFT NAVIGATION (ALWAYS ACTIVE CATEGORIES) -->
+        <!-- STEP 1: LEFT NAVIGATION -->
         <nav class="w-20 md:w-64 bg-slate-950/80 border-r border-slate-900 flex flex-col p-3 gap-2 shrink-0 z-40">
             <span id="navHeader" class="hidden md:block text-[11px] font-bold uppercase text-slate-600 tracking-widest px-3 py-2">Körpü Kateqoriyaları</span>
             
@@ -68,7 +68,7 @@
         <!-- DYNAMIC SPACE PORT -->
         <div class="flex-1 flex flex-col min-h-0 bg-[#06070a] p-4 md:p-6 relative">
             
-            <!-- STEP 2: CATEGORY GATEWAY LOBBY (SHOWN BEFORE ROOM IS ACTIVE) -->
+            <!-- STEP 2: CATEGORY GATEWAY LOBBY -->
             <div id="categoryLobbyGateway" class="absolute inset-0 bg-[#06070a]/95 backdrop-blur-md z-30 flex items-center justify-center p-4">
                 <div class="w-full max-w-md bg-slate-900/40 border border-slate-800 rounded-3xl p-6 md:p-8 shadow-2xl space-y-6">
                     <div class="text-center">
@@ -113,10 +113,7 @@
                 </div>
             </div>
 
-            <!-- ========================================== -->
-            <!-- WORKSPACE PANELS (EACH INDEPENDENT)        -->
-            <!-- ========================================== -->
-
+            <!-- PANELS -->
             <!-- PANEL: MEDIA -->
             <div id="panel-media" class="panel-node flex-1 flex flex-col min-h-0">
                 <div id="mediaGrid" class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 overflow-y-auto content-start">
@@ -152,14 +149,15 @@
                 </div>
             </div>
 
-            <!-- PANEL: FILES -->
+            <!-- PANEL: FILES (YENİLƏNDİ - MULTIPLE SELECTION) -->
             <div id="panel-files" class="panel-node flex-1 flex flex-col min-h-0 hidden max-w-xl mx-auto w-full justify-center">
-                <div class="bg-slate-950 border border-slate-900 rounded-2xl p-8 text-center space-y-4 shadow-xl">
+                <div class="bg-slate-950 border border-slate-900 rounded-2xl p-8 text-center space-y-4 shadow-xl text-slate-200">
                     <div class="w-16 h-16 bg-slate-900 border border-slate-800 rounded-full flex items-center justify-center text-2xl mx-auto">📁</div>
-                    <h3 id="lblFileTitle" class="text-base font-bold text-white">Yüksək Sürətli Birbaşa P2P Fayl Paylaşımı</h3>
-                    <input type="file" id="filePicker" class="hidden" onchange="initiateFilePipeline(this)">
-                    <button onclick="document.getElementById('filePicker').click()" id="lblPickFile" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 px-5 py-3 rounded-xl text-xs font-semibold transition-all">Kompüterdən Fayl Seçin</button>
-                    <div id="fileProgressOutput" class="text-xs font-mono text-cyan-400"></div>
+                    <h3 id="lblFileTitle" class="text-base font-bold text-white">Çoxlu və Sürətli P2P Fayl Paylaşımı</h3>
+                    <!-- multiple atributu əlavə edildi -->
+                    <input type="file" id="filePicker" multiple class="hidden" onchange="initiateFilePipeline(this)">
+                    <button onclick="document.getElementById('filePicker').click()" id="lblPickFile" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 px-5 py-3 rounded-xl text-xs font-semibold transition-all">Kompüterdən Faylları Seçin</button>
+                    <div id="fileProgressOutput" class="text-xs font-mono text-cyan-400 space-y-2 max-h-48 overflow-y-auto pt-2"></div>
                 </div>
             </div>
 
@@ -226,7 +224,7 @@
             },
             zh: {
                 mMedia: "媒体视频节点", mChat: "实时聊天网桥", mSecret: "隐秘阅后即焚", mFiles: "直连文件传输", mGames: "P2P 联机游戏", mCam: "双向对拍相机",
-                title: "房间及准入管理", desc: "在该大类下创建独立对等节点或输入4位代码。", tabC: "创建节点", tabJ: "加入网桥", limit: "参与者人数上限",
+                title: "房间及准入管理", desc: "在该大类下创建独立对等节点 or 输入4位代码。", tabC: "创建节点", tabJ: "加入网桥", limit: "参与者人数上限",
                 btnC: "激活大类独立房间", btnJ: "执行网桥握手连接", codeInp: "4位大类准入代码", active: "代码已就绪（3分钟加入限时！）", link: "复制大类准入直连链结",
                 ws: "进入大类工作空间 →", navH: "全球对等体分类"
             }
@@ -242,7 +240,6 @@
         let codeValidityTimer = null;
         let isCodeValid = true;
 
-        // Dynamic category state trackers
         let categoryActiveStates = { media: false, chat: false, secret: false, files: false, games: false, camera: false };
 
         function changeSystemLanguage(lang) {
@@ -277,17 +274,14 @@
         function selectCategory(category) {
             currentCategory = category;
             
-            // Highlight left sidebar navigation UI
             document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-category'));
             document.getElementById(`cat-${category}`).classList.add('active-category');
 
-            // Toggle Main panels visibility
             document.querySelectorAll('.panel-node').forEach(p => p.classList.add('hidden'));
             document.getElementById(`panel-${category}`).classList.remove('hidden');
 
             updateGatewayUIState();
 
-            // Load sub-game engines seamlessly if category is games
             if(category === 'games' && categoryActiveStates[category]) {
                 renderGamePlaygroundEngine();
             }
@@ -330,14 +324,14 @@
                     localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                     document.getElementById('localVideoNode').srcObject = localStream;
                 } catch(err) {
-                    console.warn("Kamera/Mikrofon tapılmadı və ya rədd edildi.", err);
+                    console.warn("Kamera/Mikrofon tapılmadı.", err);
                     localStream = new MediaStream();
                 }
             }
         }
 
         function startThreeMinuteExpiryCountdown() {
-            let timeLeft = 180; // 3 Minutes Exact
+            let timeLeft = 180; 
             isCodeValid = true;
             const timerElement = document.getElementById('dispTimer');
             timerElement.className = "bg-red-500/10 border border-red-500/30 text-red-400 px-2 py-1 rounded-md text-xs font-mono font-bold";
@@ -363,7 +357,6 @@
             await initializeHardwareMediaTracks();
             roomLimit = document.getElementById('roomLimitInput').value.trim() || "Unlimited";
             
-            // Build absolute unique namespace per channel category safely
             const uniqueQuadToken = Math.floor(1000 + Math.random() * 9000).toString();
             generatedCode = uniqueQuadToken;
             const targetPeerClusterId = `omni-axis-${currentCategory}-${uniqueQuadToken}`;
@@ -385,12 +378,12 @@
 
             peer.on('connection', (conn) => {
                 if(!isCodeValid) {
-                    conn.send({type:'err', reason:'Giriş kodunun 3 dəqiqəlik etibarlılıq müddəti bitib! Yenidən otaq yaradılmalıdır.'});
+                    conn.send({type:'err', reason:'Giriş kodunun 3 dəqiqəlik etibarlılıq müddəti bitib!'});
                     setTimeout(() => conn.close(), 500);
                     return;
                 }
                 if(roomLimit !== "Unlimited" && activeConnections.length >= parseInt(roomLimit)) {
-                    conn.send({type:'err', reason:'Otaq üçün təyin edilmiş iştirakçı limiti dolub.'});
+                    conn.send({type:'err', reason:'Otaq limiti dolub.'});
                     setTimeout(() => conn.close(), 500);
                     return;
                 }
@@ -400,7 +393,7 @@
 
         async function executeRoomConnection() {
             const token = document.getElementById('roomJoinCodeInput').value.trim();
-            if(token.length !== 4) return alert("Keçid üçün 4 rəqəmli otaq kodunu yazın.");
+            if(token.length !== 4) return alert("4 rəqəmli kodu yazın.");
             
             await initializeHardwareMediaTracks();
             generatedCode = token;
@@ -425,7 +418,7 @@
         function copyGatewayDirectLink() {
             const directUrl = `${window.location.origin}${window.location.pathname}?cat=${currentCategory}&code=${generatedCode}`;
             navigator.clipboard.writeText(directUrl);
-            alert("Bu kateqoriyaya birbaşa qoşulma linki kopyalandı!");
+            alert("Qoşulma linki kopyalandı!");
         }
 
         function dismissGatewayAndEnter() {
@@ -437,15 +430,9 @@
             if(peer) peer.destroy();
             categoryActiveStates[currentCategory] = false;
             activeConnections = [];
-            document.getElementById('mediaGrid').innerHTML = `
-                <div class="relative bg-slate-950 border border-cyan-500/20 rounded-2xl overflow-hidden aspect-video shadow-lg">
-                    <video id="localVideoNode" autoplay muted playsinline class="w-full h-full object-cover"></video>
-                    <span class="absolute bottom-3 left-3 bg-slate-900/90 px-2 py-0.5 rounded text-[10px] text-cyan-400 border border-slate-800">Siz</span>
-                </div>`;
             window.location.reload();
         }
 
-        // URL DEEP LINK PROCESSING PIPELINE
         window.addEventListener('DOMContentLoaded', () => {
             changeSystemLanguage('az');
             const params = new URLSearchParams(window.location.search);
@@ -512,7 +499,7 @@
         function broadcastSecretMessage() {
             const inp = document.getElementById('secretInput'); if(!inp.value.trim()) return;
             activeConnections.forEach(c => c.send({type:'secret', msg:inp.value}));
-            inp.value = ""; alert("Gizli söz qarşı tərəfə ötürüldü və uçuruldu!");
+            inp.value = ""; alert("Gizli söz qarşı tərəfə ötürüldü!");
         }
         function activateSecretSelfDestructExplosion(msg) {
             const box = document.getElementById('secretRevealZone');
@@ -540,33 +527,106 @@
             return u;
         }
 
-        // FAST P2P FILE BUFFER COLLECTORS
-        let fileChunkPool = []; let activeFileMetadata = null;
-        function initiateFilePipeline(picker) {
-            const targetFile = picker.files[0]; if(!targetFile) return;
-            const maxSliceSize = 16384; const fileReader = new FileReader(); let byteOffset = 0;
-            activeConnections.forEach(c => c.send({type:'file-init', name:targetFile.name, size:targetFile.size}));
-            fileReader.onload = function(evt) {
-                activeConnections.forEach(c => c.send({type:'file-slice', raw:evt.target.result}));
-                byteOffset += maxSliceSize;
-                if(byteOffset < targetFile.size) { readNextSliceBlock(); }
-                else { document.getElementById('fileProgressOutput').innerText = "Faylın transferi uğurla yekunlaşdı!"; }
-            };
-            function readNextSliceBlock() { const chunk = targetFile.slice(byteOffset, byteOffset + maxSliceSize); fileReader.readAsArrayBuffer(chunk); }
-            readNextSliceBlock();
-        }
-        function setupFileBufferStream(meta) { activeFileMetadata = meta; fileChunkPool = []; document.getElementById('fileProgressOutput').innerText = `Yüklenir: ${meta.name}`; }
-        function collectFileChunkSlice(payload) {
-            fileChunkPool.push(payload.raw);
-            if(fileChunkPool.length * 16384 >= activeFileMetadata.size) {
-                const blob = new Blob(fileChunkPool); const objectUrl = URL.createObjectURL(blob);
-                const dlBtn = document.createElement('a'); dlBtn.href = objectUrl; dlBtn.download = activeFileMetadata.name; dlBtn.innerText = `📥 ${activeFileMetadata.name} Yüklə`;
-                dlBtn.className = "block bg-emerald-600 text-white font-bold text-xs p-2.5 rounded-xl mt-3 text-center shadow";
-                document.getElementById('fileProgressOutput').appendChild(dlBtn);
+        // MULTIPLE P2P FILE BUFFER TRANSMISSION ENGINE (YENİLƏNDİ)
+        let inboundFilePools = {}; 
+        
+        async function initiateFilePipeline(picker) {
+            const files = picker.files; if(files.length === 0) return;
+            const maxSliceSize = 16384; 
+            const outputZone = document.getElementById('fileProgressOutput');
+
+            for (let i = 0; i < files.length; i++) {
+                const targetFile = files[i];
+                const fileTransferId = `file-${Date.now()}-${i}`;
+                
+                const progressIndicator = document.createElement('div');
+                progressIndicator.id = `tx-${fileTransferId}`;
+                progressIndicator.className = "bg-slate-900 border border-slate-800 p-2 rounded-xl flex justify-between items-center text-[11px]";
+                progressIndicator.innerHTML = `<span>📤 ${targetFile.name}</span><span class="text-amber-400 font-mono">Göndərilir...</span>`;
+                outputZone.appendChild(progressIndicator);
+
+                activeConnections.forEach(c => c.send({
+                    type: 'file-init', 
+                    fId: fileTransferId, 
+                    name: targetFile.name, 
+                    size: targetFile.size
+                }));
+
+                await sendSingleFileInSlices(targetFile, fileTransferId, maxSliceSize, progressIndicator);
             }
         }
 
-        // 10+ SEAMLESS HIGH PERFORMANCE INTERACTIVE GAMES CORE
+        function sendSingleFileInSlices(file, fId, maxSliceSize, indicatorEl) {
+            return new Promise((resolve) => {
+                const fileReader = new FileReader();
+                let byteOffset = 0;
+
+                fileReader.onload = function(evt) {
+                    activeConnections.forEach(c => c.send({
+                        type: 'file-slice', 
+                        fId: fId, 
+                        raw: evt.target.result
+                    }));
+                    byteOffset += maxSliceSize;
+                    if(byteOffset < file.size) {
+                        readNextSliceBlock();
+                    } else {
+                        indicatorEl.querySelector('.text-amber-400').className = "text-emerald-400 font-mono";
+                        indicatorEl.querySelector('.text-emerald-400').innerText = "Tamamlandı";
+                        resolve();
+                    }
+                };
+
+                function readNextSliceBlock() {
+                    const chunk = file.slice(byteOffset, byteOffset + maxSliceSize);
+                    fileReader.readAsArrayBuffer(chunk);
+                }
+                readNextSliceBlock();
+            });
+        }
+
+        function setupFileBufferStream(meta) { 
+            inboundFilePools[meta.fId] = {
+                name: meta.name,
+                size: meta.size,
+                chunks: []
+            };
+            
+            const outputZone = document.getElementById('fileProgressOutput');
+            const progressIndicator = document.createElement('div');
+            progressIndicator.id = `rx-${meta.fId}`;
+            progressIndicator.className = "bg-slate-900 border border-slate-800 p-2 rounded-xl flex flex-col gap-1 text-[11px] text-left";
+            progressIndicator.innerHTML = `<div class="flex justify-between"><span>📥 ${meta.name}</span><span class="status text-cyan-400 font-mono">Qəbul edilir...</span></div>`;
+            outputZone.appendChild(progressIndicator);
+        }
+
+        function collectFileChunkSlice(payload) {
+            const currentFileInstance = inboundFilePools[payload.fId];
+            if (!currentFileInstance) return;
+
+            currentFileInstance.chunks.push(payload.raw);
+            
+            if(currentFileInstance.chunks.length * 16384 >= currentFileInstance.size) {
+                const blob = new Blob(currentFileInstance.chunks); 
+                const objectUrl = URL.createObjectURL(blob);
+                
+                const targetContainer = document.getElementById(`rx-${payload.fId}`);
+                if (targetContainer) {
+                    targetContainer.querySelector('.status').className = "text-emerald-400 font-mono";
+                    targetContainer.querySelector('.text-emerald-400').innerText = "Yükləndi";
+                    
+                    const dlBtn = document.createElement('a'); 
+                    dlBtn.href = objectUrl; 
+                    dlBtn.download = currentFileInstance.name; 
+                    dlBtn.innerText = `Faylı Saxla 💾`;
+                    dlBtn.className = "block bg-emerald-600/30 text-emerald-400 hover:bg-emerald-600 hover:text-white font-bold text-[10px] p-1.5 rounded-lg mt-1 text-center transition-all border border-emerald-500/30";
+                    targetContainer.appendChild(dlBtn);
+                }
+                delete inboundFilePools[payload.fId]; 
+            }
+        }
+
+        // GAMES CORE
         let clickMatchScoreLocal = 0;
         function renderGamePlaygroundEngine() {
             const selectedGame = document.getElementById('activeGameSelector').value;
@@ -626,7 +686,6 @@
             }
         }
 
-        // GAME P2P SYNCHRONIZER TRANSMITTERS
         function submitTicMove(i) { activeConnections.forEach(c => c.send({type:'game-relay', mode:'tic', index:i, token:'O'})); document.getElementById(`cell-${i}`).innerText = 'X'; }
         function triggerClickHit() { clickMatchScoreLocal++; document.getElementById('sLocal').innerText = clickMatchScoreLocal; activeConnections.forEach(c => c.send({type:'game-relay', mode:'click', score:clickMatchScoreLocal})); }
         function submitRpsToken(t) { activeConnections.forEach(c => c.send({type:'game-relay', mode:'rps', token:t})); document.getElementById('rpsLogs').innerText = `Siz [${t}] seçdiniz. Rəqib gözlənilir...`; }
