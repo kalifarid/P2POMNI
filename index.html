@@ -1,604 +1,604 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="az" class="h-full">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P2POMNI - GLOBAL P2P BRIDGE</title>
-    <!-- Tailwind CSS və FontAwesome İkonları -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>P2POMNI — Global P2P Bridge</title>
+    <!-- Tailwind CSS və Google Fonts -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- PeerJS Kitabxanası (P2P Bağlantı üçün) -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- PeerJS Kitabxanası -->
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap');
-        .cyber-font { font-family: 'Rajdhani', sans-serif; }
-        .cyber-glow { text-shadow: 0 0 10px rgba(6, 182, 212, 0.7); }
-        .cyber-panel { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(6, 182, 212, 0.2); }
-        body { background: radial-gradient(circle at center, #0f172a 0%, #020617 100%); min-height: 100vh; overflow-x: hidden; }
-        video { transform: scaleX(-1); object-fit: cover; }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #020617; }
-        ::-webkit-scrollbar-thumb { background: #06b6d4; border-radius: 3px; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: radial-gradient(circle at top right, #1a1a2e, #0f0f1b);
+        }
+        .code-font {
+            font-family: 'JetBrains Mono', sans-serif;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111827;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4B5563;
+        }
     </style>
 </head>
-<body class="cyber-font text-slate-100 antialiased">
+<body class="h-full text-gray-100 flex flex-col overflow-hidden select-none">
 
-    <!-- TOP NAVIGATION & LANGUAGE CHANGER -->
-    <header class="w-full border-b border-cyan-500/20 bg-slate-950/80 backdrop-blur sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
-        <div class="flex items-center space-x-3">
-            <div class="h-10 w-10 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-[0_0_15px_rgba(6,182,212,0.4)]">
-                <i class="fa-solid fa-circle-nodes text-xl text-white animate-pulse"></i>
+    <!-- TOP NAVIGATION BAR -->
+    <header class="bg-gray-900/80 backdrop-blur-md border-b border-gray-800 px-4 py-3 flex items-center justify-between z-50 shrink-0">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                <span class="text-white font-bold text-xl tracking-tighter">Ω</span>
             </div>
             <div>
-                <h1 class="text-2xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 cyber-glow">P2POMNI</h1>
-                <p class="text-xs text-cyan-400/70 uppercase tracking-widest hidden sm:block">Global P2P Bridge</p>
+                <h1 class="font-bold text-lg leading-none tracking-wide bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">P2POMNI</h1>
+                <p class="text-[10px] text-cyan-400 font-medium tracking-widest uppercase mt-0.5">Global P2P Bridge</p>
             </div>
         </div>
 
-        <!-- Dil Bayraqları -->
-        <div class="flex items-center space-x-2 bg-slate-900/90 border border-slate-700/50 p-1.5 rounded-xl">
-            <button onclick="changeLanguage('en')" class="lang-btn px-2.5 py-1 rounded-md text-sm transition font-bold border border-transparent hover:border-cyan-500/40" id="btn-en" title="English">🇺🇸 EN</button>
-            <button onclick="changeLanguage('az')" class="lang-btn px-2.5 py-1 rounded-md text-sm transition font-bold border border-transparent hover:border-cyan-500/40" id="btn-az" title="Azərbaycanca">🇦🇿 AZ</button>
-            <button onclick="changeLanguage('tr')" class="lang-btn px-2.5 py-1 rounded-md text-sm transition font-bold border border-transparent hover:border-cyan-500/40" id="btn-tr" title="Türkçe">🇹🇷 TR</button>
-            <button onclick="changeLanguage('ru')" class="lang-btn px-2.5 py-1 rounded-md text-sm transition font-bold border border-transparent hover:border-cyan-500/40" id="btn-ru" title="Русский">🇷🇺 RU</button>
-            <button onclick="changeLanguage('zh')" class="lang-btn px-2.5 py-1 rounded-md text-sm transition font-bold border border-transparent hover:border-cyan-500/40" id="btn-zh" title="中文">🇨🇳 ZH</button>
+        <!-- Language Flags Component -->
+        <div class="flex items-center gap-1.5 bg-gray-950/60 p-1.5 rounded-xl border border-gray-800/80">
+            <button onclick="changeLanguage('az')" class="lang-btn px-2 py-1 rounded-md text-xs transition-all font-semibold hover:bg-gray-800" data-lang="az">🇦🇿 AZ</button>
+            <button onclick="changeLanguage('en')" class="lang-btn px-2 py-1 rounded-md text-xs transition-all font-semibold hover:bg-gray-800" data-lang="en">🇺🇸 EN</button>
+            <button onclick="changeLanguage('tr')" class="lang-btn px-2 py-1 rounded-md text-xs transition-all font-semibold hover:bg-gray-800" data-lang="tr">🇹🇷 TR</button>
+            <button onclick="changeLanguage('ru')" class="lang-btn px-2 py-1 rounded-md text-xs transition-all font-semibold hover:bg-gray-800" data-lang="ru">🇷🇺 RU</button>
+            <button onclick="changeLanguage('zh')" class="lang-btn px-2 py-1 rounded-md text-xs transition-all font-semibold hover:bg-gray-800" data-lang="zh">🇨🇳 ZH</button>
         </div>
     </header>
 
-    <!-- MAIN APP WRAPPER -->
-    <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-
-        <!-- LOBBY SCREEN (OTAQ YARATMA VƏ DAXİL OLMA) -->
-        <div id="lobby-screen" class="max-w-2xl mx-auto my-12 space-y-8 animate-fade-in">
-            <div class="text-center space-y-3">
-                <h2 id="lang-welcome" class="text-4xl font-bold tracking-tight text-white sm:text-5xl">Təhlükəsiz Qlobal P2P Şəbəkəsi</h2>
-                <p id="lang-subwelcome" class="text-lg text-slate-400">Heç bir server yaddaşı olmadan, birbaşa cihazlar arası şifrələnmiş video və səs otaqları.</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Otaq Yarat panel -->
-                <div class="cyber-panel p-6 rounded-2xl flex flex-col justify-between space-y-4">
-                    <div>
-                        <div class="flex items-center space-x-2 text-cyan-400 font-bold text-lg mb-3">
-                            <i class="fa-solid fa-plus-circle"></i>
-                            <span id="lang-create-title">Yeni Otaq Yarat</span>
-                        </div>
-                        <label id="lang-label-limit" class="block text-sm text-slate-400 mb-2">Maksimum İştirakçı Sayı (Özünüzdən başqa):</label>
-                        <input type="number" id="room-limit-input" min="1" max="10" value="4" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-cyan-400 focus:outline-none focus:border-cyan-500 font-bold text-center">
-                    </div>
-                    <button onclick="createNewRoom()" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold py-3 px-4 rounded-xl transition shadow-lg shadow-cyan-500/20 active:scale-95">
-                        <span id="lang-btn-create">Otağı Başlat</span>
-                    </button>
+    <!-- MAIN INTERFACE -->
+    <main class="flex-1 flex flex-col md:flex-row min-h-0 relative">
+        
+        <!-- LOBBY / SETUP SCREEN -->
+        <div id="lobbyScreen" class="absolute inset-0 z-40 bg-[#0f0f1b] flex items-center justify-center p-4 overflow-y-auto">
+            <div class="w-full max-w-md bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-2xl p-6 md:p-8 shadow-2xl">
+                <div class="text-center mb-6">
+                    <h2 id="txtLobbyTitle" class="text-2xl font-bold text-white mb-2">P2P Şəbəkəsinə Qoşulun</h2>
+                    <p id="txtLobbyDesc" class="text-sm text-gray-400">Heç bir server qeydiyyatı olmadan birbaşa Peer-to-Peer bağlantı.</p>
                 </div>
 
-                <!-- Otağa Qoşul panel -->
-                <div class="cyber-panel p-6 rounded-2xl flex flex-col justify-between space-y-4">
-                    <div>
-                        <div class="flex items-center space-x-2 text-emerald-400 font-bold text-lg mb-3">
-                            <i class="fa-solid fa-right-to-bracket"></i>
-                            <span id="lang-join-title">Mövcud Otağa Qoşul</span>
-                        </div>
-                        <label id="lang-label-code" class="block text-sm text-slate-400 mb-2">Otaq Kodunu Daxil Edin:</label>
-                        <input type="text" id="room-id-input" placeholder="p2p-xxxx-xxxx" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-slate-200 focus:outline-none focus:border-cyan-500 tracking-wider text-center">
+                <!-- Create Room Block -->
+                <div class="space-y-4 mb-6">
+                    <div class="bg-gray-950/40 border border-gray-800/60 rounded-xl p-4">
+                        <label id="lblMaxUsers" class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Maksimum İştirakçı Sayı (Özünüzdən Başqa)</label>
+                        <input type="number" id="maxUsersInput" value="5" min="1" max="20" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500 transition-colors">
+                        <button onclick="createRoom()" id="btnCreateRoom" class="w-full mt-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-medium py-2.5 rounded-lg text-sm transition-all shadow-lg shadow-cyan-500/10">Yeni Otaq Yarat</button>
                     </div>
-                    <button onclick="joinRoomDirect()" class="w-full bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-emerald-500/30 font-bold py-3 px-4 rounded-xl transition active:scale-95">
-                        <span id="lang-btn-join">Qoşul</span>
-                    </button>
+                </div>
+
+                <div class="relative flex py-2 items-center justify-center mb-6">
+                    <div class="border-t border-gray-800 flex-grow"></div>
+                    <span id="txtOr" class="mx-3 text-xs text-gray-500 font-bold uppercase tracking-widest">və ya</span>
+                    <div class="border-t border-gray-800 flex-grow"></div>
+                </div>
+
+                <!-- Join Room Block -->
+                <div class="space-y-3">
+                    <div>
+                        <label id="lblRoomCode" class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Bağlantı Kodu / Otaq ID</label>
+                        <input type="text" id="roomCodeInput" placeholder="Məs: omni-7a2c-9b8d" class="w-full bg-gray-900/60 border border-gray-800 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500 transition-colors code-font">
+                    </div>
+                    <button onclick="joinRoom()" id="btnJoinRoom" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-200 font-medium py-2.5 rounded-lg text-sm transition-all border border-gray-700/60">Otağa Qoşul</button>
                 </div>
             </div>
         </div>
 
-        <!-- ACTIVE CHAT INTERFACE (OTAQ EKRAI) -->
-        <div id="room-screen" class="hidden space-y-6 animate-fade-in">
-            <!-- STATUS BAR -->
-            <div class="cyber-panel px-6 py-3 rounded-2xl flex flex-wrap justify-between items-center gap-4">
-                <div class="flex items-center space-x-4">
-                    <span class="flex h-3 w-3 relative">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                    </span>
-                    <div class="text-sm">
-                        <span id="lang-status-connected" class="text-slate-400">Otaq Kodu:</span>
-                        <span id="current-room-display" class="font-bold text-cyan-400 tracking-wider ml-1">---</span>
+        <!-- CORE APPLICATION WORKSPACE (Hidden initially) -->
+        <div id="appWorkspace" class="hidden flex-1 flex flex-col md:flex-row min-h-0 w-full">
+            
+            <!-- LEFT PANEL: VIDEOS & CONTROLS -->
+            <div class="w-full md:w-[45%] lg:w-[40%] bg-gray-950/20 border-b md:border-b-0 md:border-r border-gray-800/80 flex flex-col min-h-0">
+                
+                <!-- Room Info / Header Info -->
+                <div class="p-3 bg-gray-900/40 border-b border-gray-800/60 flex items-center justify-between shrink-0">
+                    <div class="min-w-0">
+                        <span id="txtActiveRoom" class="text-[10px] uppercase font-bold tracking-wider text-cyan-400 block">Aktiv Körpü</span>
+                        <div class="flex items-center gap-2 mt-0.5">
+                            <span id="displayRoomId" class="text-sm font-semibold text-white truncate code-font">---</span>
+                            <button onclick="copyRoomId()" class="text-gray-400 hover:text-white transition-colors" title="Copy Link">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="bg-gray-900 border border-gray-800 px-2.5 py-1 rounded-lg text-right">
+                        <span id="txtUserCount" class="text-[10px] text-gray-400 block font-medium">İştirakçılar</span>
+                        <span id="participantCount" class="text-xs font-bold text-emerald-400 code-font">1 / 1</span>
                     </div>
                 </div>
 
-                <!-- Limit və İştirakçı Göstəricisi -->
-                <div class="flex items-center space-x-4">
-                    <div class="bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl text-xs">
-                        <span id="lang-slot-label" class="text-slate-400">İştirakçılar:</span>
-                        <span id="participant-count" class="font-bold text-white ml-1">1</span> / <span id="room-limit-display" class="font-bold text-cyan-400">--</span>
+                <!-- Video Grid Area -->
+                <div id="videoGrid" class="flex-1 p-3 overflow-y-auto grid grid-cols-2 gap-2 auto-rows-max content-start bg-gray-900/10">
+                    <!-- Local stream window -->
+                    <div class="relative aspect-video bg-gray-950 rounded-xl overflow-hidden border border-cyan-500/30 group shadow-md shadow-black/40">
+                        <video id="localVideo" autoplay muted playsinline class="w-full h-full object-cover"></video>
+                        <div class="absolute bottom-2 left-2 bg-gray-900/80 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-medium border border-gray-700 text-cyan-400 z-10">
+                            <span id="txtYou">Siz</span> (Local)
+                        </div>
                     </div>
-                    <button onclick="copyRoomLink()" class="bg-slate-800 hover:bg-cyan-600/20 text-cyan-400 px-4 py-1.5 rounded-xl text-xs border border-cyan-500/20 transition flex items-center space-x-2">
-                        <i class="fa-solid fa-copy"></i>
-                        <span id="lang-btn-copy">Kodu Kopyala</span>
+                </div>
+
+                <!-- Media Controls Bar -->
+                <div class="p-4 bg-gray-950/40 border-t border-gray-800/60 flex items-center justify-center gap-3 shrink-0">
+                    <!-- Mic Toggle -->
+                    <button onclick="toggleAudio()" id="micBtn" class="w-12 h-12 rounded-xl bg-gray-800 hover:bg-gray-700 text-white flex items-center justify-center transition-all border border-gray-700 shadow-md">
+                        <svg class="w-5 h-5 fill-none stroke-current" viewBox="0 0 24 24" stroke-width="2"><path id="micIconPath" d="M12 1c-1.66 0-3 1.34-3 3v8c0 1.66 1.34 3 3 3s3-1.34 3-3V4c0-1.66-1.34-3-3-3z M19 10v1a7 7 0 0 1-14 0v-1 M12 19v4 M8 23h8"/></svg>
+                    </button>
+                    <!-- Cam Toggle -->
+                    <button onclick="toggleVideo()" id="camBtn" class="w-12 h-12 rounded-xl bg-gray-800 hover:bg-gray-700 text-white flex items-center justify-center transition-all border border-gray-700 shadow-md">
+                        <svg class="w-5 h-5 fill-none stroke-current" viewBox="0 0 24 24" stroke-width="2"><path id="camIconPath" d="M23 7l-7 5 7 5V7z M1 5h15v14H1z"/></svg>
+                    </button>
+                    <!-- Screen Share Toggle -->
+                    <button onclick="toggleScreenShare()" id="screenBtn" class="w-12 h-12 rounded-xl bg-gray-800 hover:bg-gray-700 text-cyan-400 flex items-center justify-center transition-all border border-gray-700/60 shadow-md">
+                        <svg class="w-5 h-5 fill-none stroke-current" viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><path d="M8 21h8M12 17v4"/></svg>
+                    </button>
+                    <!-- Disconnect Button -->
+                    <button onclick="disconnectCall()" id="btnExit" class="w-12 h-12 rounded-xl bg-red-600 hover:bg-red-700 text-white flex items-center justify-center transition-all shadow-lg shadow-red-600/20">
+                        <svg class="w-5 h-5 fill-none stroke-current" viewBox="0 0 24 24" stroke-width="2"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
                     </button>
                 </div>
             </div>
 
-            <!-- GRID MEDIA WALL -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="video-grid">
-                <!-- Local video container -->
-                <div class="relative bg-slate-950 rounded-2xl overflow-hidden border border-cyan-500/30 group aspect-video shadow-xl" id="local-video-card">
-                    <video id="local-video" autoplay playsinline muted class="w-full h-full"></video>
-                    <div class="absolute bottom-3 left-3 bg-slate-900/80 backdrop-blur px-3 py-1 rounded-lg text-xs font-bold text-cyan-400 border border-cyan-500/20">
-                        <span id="lang-you-label">Siz (Sahib)</span>
-                    </div>
-                    <!-- Status İkonları overlay -->
-                    <div class="absolute top-3 right-3 flex space-x-2">
-                        <div id="status-mic-off" class="hidden h-7 w-7 rounded-full bg-red-500/80 flex items-center justify-center text-white text-xs"><i class="fa-solid fa-microphone-slash"></i></div>
-                        <div id="status-cam-off" class="hidden h-7 w-7 rounded-full bg-red-500/80 flex items-center justify-center text-white text-xs"><i class="fa-solid fa-video-slash"></i></div>
-                    </div>
+            <!-- RIGHT PANEL: CONTENT BRIDGE (CHATS & REAL-TIME CODES) -->
+            <div class="flex-1 flex flex-col min-h-0 bg-[#12121e]">
+                
+                <!-- Tab Switching Structure -->
+                <div class="flex bg-gray-900/60 border-b border-gray-800/80 p-1 shrink-0">
+                    <button onclick="switchTab('chat')" id="tabChat" class="flex-1 py-2 text-center text-xs font-semibold rounded-lg transition-all text-white bg-gray-800">Chat Bridge</button>
+                    <button onclick="switchTab('code')" id="tabCode" class="flex-1 py-2 text-center text-xs font-semibold rounded-lg transition-all text-gray-400 hover:text-white">Code Engine Bridge</button>
                 </div>
-            </div>
 
-            <!-- CONTROL PANEL -->
-            <div class="flex justify-center items-center space-x-4 py-4">
-                <!-- Səs aç/bağla -->
-                <button onclick="toggleAudio()" id="btn-toggle-audio" class="h-14 w-14 rounded-full bg-cyan-600 hover:bg-cyan-500 text-white flex items-center justify-center transition-all shadow-lg active:scale-95 text-lg">
-                    <i class="fa-solid fa-microphone" id="icon-audio"></i>
-                </button>
-                <!-- Kamera aç/bağla -->
-                <button onclick="toggleVideo()" id="btn-toggle-video" class="h-14 w-14 rounded-full bg-cyan-600 hover:bg-cyan-500 text-white flex items-center justify-center transition-all shadow-lg active:scale-95 text-lg">
-                    <i class="fa-solid fa-video" id="icon-video"></i>
-                </button>
-                <!-- Otaqdan çıx -->
-                <button onclick="leaveRoom()" id="btn-leave" class="h-14 w-16 rounded-2xl bg-red-600 hover:bg-red-500 text-white flex items-center justify-center transition-all shadow-lg active:scale-95 text-lg border border-red-500/30" title="Leave">
-                    <i class="fa-solid fa-phone-slash"></i>
-                </button>
+                <!-- CHAT MODULE CONTAINER -->
+                <div id="panelChat" class="flex-1 flex flex-col min-h-0">
+                    <div id="chatMessageArea" class="flex-1 p-4 overflow-y-auto space-y-3 bg-gray-900/10">
+                        <!-- System notifications and standard texts loaded here dynamically -->
+                    </div>
+                    <form id="chatInputForm" onsubmit="sendChatMessage(event)" class="p-3 bg-gray-950/40 border-t border-gray-800/80 flex items-center gap-2">
+                        <input type="text" id="chatInputField" placeholder="Mesaj yazın..." autocomplete="off" class="flex-1 bg-gray-900/80 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500 transition-colors">
+                        <button type="submit" class="bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-2.5 rounded-xl transition-colors shrink-0">
+                            <svg class="w-4 h-4 fill-current transform rotate-90" viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- CODE MODULE CONTAINER -->
+                <div id="panelCode" class="hidden flex-1 flex flex-col min-h-0 bg-gray-950/40">
+                    <div class="p-2.5 bg-gray-900/50 border-b border-gray-800 flex items-center justify-between shrink-0">
+                        <span id="lblCodeLang" class="text-xs font-semibold tracking-wider text-gray-400 uppercase">Real-Time Sync Engine</span>
+                        <span class="text-[10px] bg-cyan-500/10 text-cyan-400 px-2 py-0.5 rounded-md font-mono border border-cyan-500/20">Live P2P</span>
+                    </div>
+                    <textarea id="codeTextArea" oninput="broadcastCodeUpdate()" class="flex-1 bg-gray-900/30 p-4 code-font text-sm text-emerald-400 placeholder-gray-600 focus:outline-none resize-none leading-relaxed" placeholder="// Bura yazılan hər bir kod real vaxt rejimində qarşı tərəfdə dərhal görünəcək..."></textarea>
+                </div>
+
             </div>
         </div>
     </main>
 
-    <!-- NOTIFICATION SYSTEM -->
-    <div id="toast-container" class="fixed bottom-6 right-6 z-50 space-y-2"></div>
-
-    <!-- MAIN CORE LOGIC SCRIPT -->
+    <!-- REAL-TIME CORE ARCHITECTURE LOGIC ENGINE -->
     <script>
-        // LOKALİZASİYA DATA LÜĞƏTİ
+        // Multi-Language System Dataset
         const dictionary = {
-            en: {
-                welcome: "Secure Global P2P Networking",
-                subwelcome: "Encrypted P2P room infrastructure directly between browser nodes.",
-                createTitle: "Create Premium Room",
-                labelLimit: "Max Connected Guests (excluding you):",
-                btnCreate: "Launch Infrastructure",
-                joinTitle: "Join Existing Room",
-                labelCode: "Enter Secure Token/ID:",
-                btnJoin: "Establish Bridge",
-                connected: "Secure Mesh Token:",
-                slotLabel: "Nodes:",
-                btnCopy: "Copy ID",
-                youLabel: "You (Local Node)",
-                toastCopy: "Room Token copied to clipboard!",
-                toastMax: "Room full status reached!",
-                toastJoin: "New peer connected to structural mesh.",
-                toastLeave: "A peer disconnected from current mesh."
-            },
             az: {
-                welcome: "Təhlükəsiz Qlobal P2P Şəbəkəsi",
-                subwelcome: "Heç bir server yaddaşı olmadan, birbaşa cihazlar arası şifrələnmiş video otaqlar.",
-                createTitle: "Yeni Otaq Yarat",
-                labelLimit: "Maksimum İştirakçı Sayı (Özünüzdən başqa):",
-                btnCreate: "Otağı Başlat",
-                joinTitle: "Mövcud Otağa Qoşul",
-                labelCode: "Otaq Kodunu Daxil Edin:",
-                btnJoin: "Qoşul",
-                connected: "Otaq Kodu:",
-                slotLabel: "İştirakçılar:",
-                btnCopy: "Kodu Kopyala",
-                youLabel: "Siz (Sahib)",
-                toastCopy: "Otaq kodu mübadilə yaddaşına kopyalandı!",
-                toastMax: "Otaq limiti dolub! Giriş rədd edildi.",
-                toastJoin: "Yeni istifadəçi şəbəkəyə qoşuldu.",
-                toastLeave: "İstifadəçi otaqdan ayrıldı."
+                title: "P2P Şəbəkəsinə Qoşulun",
+                desc: "Heç bir server qeydiyyatı olmadan birbaşa Peer-to-Peer bağlantı.",
+                lblMax: "Maksimum İştirakçı Sayı (Özünüzdən Başqa)",
+                btnCreate: "Yeni Otaq Yarat",
+                or: "və ya",
+                lblCode: "Bağlantı Kodu / Otaq ID",
+                btnJoin: "Otağa Qoşul",
+                activeRoom: "Aktiv Körpü",
+                users: "İştirakçılar",
+                you: "Siz",
+                chatPlaceholder: "Mesaj yazın...",
+                codePlaceholder: "// Bura yazılan hər bir kod real vaxt rejimində qarşı tərəfdə dərhal görünəcək..."
+            },
+            en: {
+                title: "Connect to P2P Network",
+                desc: "Direct Peer-to-Peer connection without server registration.",
+                lblMax: "Max Participants (Excluding You)",
+                btnCreate: "Create New Room",
+                or: "or",
+                lblCode: "Connection Code / Room ID",
+                btnJoin: "Join Existing Room",
+                activeRoom: "Active Bridge ID",
+                users: "Peers",
+                you: "You",
+                chatPlaceholder: "Type a message...",
+                codePlaceholder: "// Any code typed here will instantly replicate across all peers in real-time..."
             },
             tr: {
-                welcome: "Güvenli Küresel P2P Ağ Bağlantısı",
-                subwelcome: "Sunucu depolaması olmadan, tarayıcı düğümleri arasında doğrudan şifreli odalar.",
-                createTitle: "Yeni Oda Oluştur",
-                labelLimit: "Maksimum Katılımcı Sayısı (Siz hariç):",
-                btnCreate: "Odayı Başlat",
-                joinTitle: "Mevcut Odaya Katıl",
-                labelCode: "Oda Kodunu Girin:",
-                btnJoin: "Bağlantı Kur",
-                connected: "Oda Kodu:",
-                slotLabel: "Katılımcı:",
-                btnCopy: "Kodu Kopyala",
-                youLabel: "Siz (Sahip)",
-                toastCopy: "Oda kodu panoya kopyalandı!",
-                toastMax: "Oda maksimum kapasiteye ulaştı!",
-                toastJoin: "Yeni bir kullanıcı odaya giriş yaptı.",
-                toastLeave: "Bir kullanıcı odadan ayrıldı."
+                title: "P2P Ağma Bağlanın",
+                desc: "Sunucu kaydı olmadan doğrudan Peer-to-Peer bağlantı.",
+                lblMax: "Maksimum Katılımcı Sayısı (Siz Hariç)",
+                btnCreate: "Yeni Oda Oluştur",
+                or: "veya",
+                lblCode: "Bağlantı Kodu / Oda ID",
+                btnJoin: "Odaya Katıl",
+                activeRoom: "Aktif Köprü",
+                users: "Katılımcılar",
+                you: "Siz",
+                chatPlaceholder: "Bir mesaj yazın...",
+                codePlaceholder: "// Buraya yazılan her kod gerçek zamanlı olarak tüm taraflarda anında görünecektir..."
             },
             ru: {
-                welcome: "Безопасная Глобальная P2P Сеть",
-                subwelcome: "Зашифрованная медиа-структура напрямую между браузерами без хранения на сервере.",
-                createTitle: "Создать Комнату",
-                labelLimit: "Макс. гостей (не включая вас):",
-                btnCreate: "Запустить Сессию",
-                joinTitle: "Подключиться к Комнате",
-                labelCode: "Введите уникальный код/токен:",
-                btnJoin: "Подключиться",
-                connected: "Токен Комнаты:",
-                slotLabel: "Участники:",
-                btnCopy: "Копировать код",
-                youLabel: "Вы (Организатор)",
-                toastCopy: "Код комнаты скопирован в буфер обмена!",
-                toastMax: "Достигнут лимит участников в комнате!",
-                toastJoin: "Новый участник подключился к узлу.",
-                toastLeave: "Участник отключился от сессии."
+                title: "Подключение к сети P2P",
+                desc: "Прямое соединение Peer-to-Peer без регистрации на сервере.",
+                lblMax: "Макс. участников (кроме вас)",
+                btnCreate: "Создать комнату",
+                or: "или",
+                lblCode: "Код подключения / ID комнаты",
+                btnJoin: "Присоединиться",
+                activeRoom: "Активный Мост",
+                users: "Участники",
+                you: "Вы",
+                chatPlaceholder: "Введите сообщение...",
+                codePlaceholder: "// Любой код, введенный здесь, мгновенно отобразится у всех участников..."
             },
             zh: {
-                welcome: "安全全球 P2P 网络",
-                subwelcome: "浏览器节点之间直接建立加密的端到端音视频聊天房间。",
-                createTitle: "创建新房间",
-                labelLimit: "最大允许访客数（不包含自己）:",
-                btnCreate: "启动网桥",
-                joinTitle: "加入现有房间",
-                labelCode: "输入房间安全令牌/ID:",
-                btnJoin: "建立连接",
-                connected: "房间令牌:",
-                slotLabel: "当前节点数:",
-                btnCopy: "复制 ID",
-                youLabel: "您（本地节点）",
-                toastCopy: "房间代码已复制到剪贴板！",
-                toastMax: "房间已满！无法加入。",
-                toastJoin: "新用户已成功连接至网桥。",
-                toastLeave: "用户已从当前网桥断开连接。"
+                title: "连接到 P2P 网络",
+                desc: "无需服务器注册的直接端到端连接。",
+                lblMax: "最大参与人数（不包括您）",
+                btnCreate: "创建新房间",
+                or: "或",
+                lblCode: "连接代码 / 房间 ID",
+                btnJoin: "加入房间",
+                activeRoom: "活动网桥",
+                users: "在线节点",
+                you: "您",
+                chatPlaceholder: "输入消息...",
+                codePlaceholder: "// 此处输入的任何代码都将在所有节点之间实时同步显示..."
             }
         };
 
-        let currentLang = 'en';
-        let localStream = null;
+        let currentLang = 'az';
         let peer = null;
-        let currentRoomId = null;
-        let roomMaxLimit = 4;
-        let connectedPeers = {}; // {peerId: callObject}
-        let activeConnections = {}; // {peerId: dataConnectionObject}
+        let localStream = null;
+        let screenStream = null;
+        let connections = [];
+        let roomMaxPeers = 5;
+        let activeRoomId = '';
+        let isHost = false;
 
-        // DİL DEYİŞDİRMƏ SİSTEMİ
+        // Change App Interface Language Language Dynamically
         function changeLanguage(lang) {
             currentLang = lang;
             document.querySelectorAll('.lang-btn').forEach(btn => {
-                btn.classList.remove('bg-cyan-500', 'text-slate-950', 'border-cyan-500');
-                btn.classList.add('text-slate-100', 'border-transparent');
+                btn.classList.remove('bg-cyan-500', 'text-white');
+                if(btn.getAttribute('data-lang') === lang) btn.classList.add('bg-cyan-500', 'text-white');
             });
-            const activeBtn = document.getElementById(`btn-${lang}`);
-            if(activeBtn) {
-                activeBtn.classList.add('bg-cyan-500', 'text-slate-950', 'border-cyan-500');
-            }
 
-            // Mətnlərin renderi
-            document.getElementById('lang-welcome').innerText = dictionary[lang].welcome;
-            document.getElementById('lang-subwelcome').innerText = dictionary[lang].subwelcome;
-            document.getElementById('lang-create-title').innerText = dictionary[lang].createTitle;
-            document.getElementById('lang-label-limit').innerText = dictionary[lang].labelLimit;
-            document.getElementById('lang-btn-create').innerText = dictionary[lang].btnCreate;
-            document.getElementById('lang-join-title').innerText = dictionary[lang].joinTitle;
-            document.getElementById('lang-label-code').innerText = dictionary[lang].labelCode;
-            document.getElementById('lang-btn-join').innerText = dictionary[lang].btnJoin;
-            document.getElementById('lang-status-connected').innerText = dictionary[lang].connected;
-            document.getElementById('lang-slot-label').innerText = dictionary[lang].slotLabel;
-            document.getElementById('lang-btn-copy').innerText = dictionary[lang].btnCopy;
-            document.getElementById('lang-you-label').innerText = dictionary[lang].youLabel;
+            const d = dictionary[lang];
+            document.getElementById('txtLobbyTitle').innerText = d.title;
+            document.getElementById('txtLobbyDesc').innerText = d.desc;
+            document.getElementById('lblMaxUsers').innerText = d.lblMax;
+            document.getElementById('btnCreateRoom').innerText = d.btnCreate;
+            document.getElementById('txtOr').innerText = d.or;
+            document.getElementById('lblRoomCode').innerText = d.lblCode;
+            document.getElementById('btnJoinRoom').innerText = d.btnJoin;
+            document.getElementById('txtActiveRoom').innerText = d.activeRoom;
+            document.getElementById('txtUserCount').innerText = d.users;
+            document.getElementById('txtYou').innerText = d.you;
+            document.getElementById('chatInputField').placeholder = d.chatPlaceholder;
+            document.getElementById('codeTextArea').placeholder = d.codePlaceholder;
         }
 
-        // INITIALIZE APP
-        window.addEventListener('DOMContentLoaded', () => {
-            changeLanguage('en');
-            // Əgər URL-də birbaşa otaq kodu gəlibsə avtomatik inputa yerləşdir
-            const urlParams = new URLSearchParams(window.location.search);
-            const roomParam = urlParams.get('room');
-            if(roomParam) {
-                document.getElementById('room-id-input').value = roomParam;
-            }
-        });
-
-        // TOAST NOTIFICATION GENERATOR
-        function showToast(messageKey) {
-            const container = document.getElementById('toast-container');
-            const msg = dictionary[currentLang][messageKey] || messageKey;
-            const toast = document.createElement('div');
-            toast.className = "bg-slate-900 border border-cyan-500/30 text-slate-200 px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-2 text-sm animate-bounce";
-            toast.innerHTML = `<i class="fa-solid fa-bell text-cyan-400"></i> <span>${msg}</span>`;
-            container.appendChild(toast);
-            setTimeout(() => toast.remove(), 4000);
-        }
-
-        // MEDIA STREAM INITIALIZER
+        // Initialize Media Input Capture
         async function initMedia() {
-            if (!localStream) {
-                try {
-                    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                    document.getElementById('local-video').srcObject = localStream;
-                } catch (err) {
-                    console.error("Media access denied:", err);
-                    // Əgər kamera yoxdursa yalnız audio və ya dummy stream yoxla
-                    localStream = new MediaStream();
-                }
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                document.getElementById('localVideo').srcObject = localStream;
+            } catch (err) {
+                console.error("Kamera/Mikrofon tapılmadı, yalnız səs rejimində və ya məhdud davam edilir.", err);
+                localStream = new MediaStream();
             }
         }
 
-        // GENERIC PEER CONFIGURATION
-        function setupPeer(targetId = null) {
+        // Setup Peer Connection Engine
+        function setupPeer(id = null) {
             return new Promise((resolve) => {
-                // Stabil işləmək üçün qlobal ümumi cloud PeerJS serverindən istifadə olunur
-                peer = new Peer(targetId, {
-                    debug: 1,
-                    config: {
-                        iceServers: [
-                            { urls: 'stun:stun.l.google.com:19302' },
-                            { urls: 'stun:stun1.l.google.com:19302' },
-                            { urls: 'stun:stun2.l.google.com:19302' }
-                        ]
-                    }
+                peer = new Peer(id, {
+                    host: '0.peerjs.com',
+                    port: 443,
+                    secure: true,
+                    debug: 1
                 });
 
-                peer.on('open', (id) => {
-                    resolve(id);
+                peer.on('open', (openedId) => {
+                    resolve(openedId);
                 });
 
-                peer.on('error', (err) => {
-                    console.error("P2P Mesh Error:", err.type);
-                    if(err.type === 'unavailable-id') {
-                        alert("Room serialization conflict. Retrying setup.");
-                    }
+                peer.on('call', (call) => {
+                    // Automatically answer incoming calls with active media stream
+                    call.answer(localStream);
+                    call.on('stream', (remoteStream) => {
+                        addRemoteVideo(call.peer, remoteStream);
+                    });
+                });
+
+                peer.on('connection', (conn) => {
+                    handleDataConnection(conn);
                 });
             });
         }
 
-        // CREATE ROOM ROUTINE
-        async function createNewRoom() {
-            roomMaxLimit = parseInt(document.getElementById('room-limit-input').value) || 4;
-            await initMedia();
+        // Handle incoming data flows
+        function handleDataConnection(conn) {
+            connections.push(conn);
+            updatePeerCount();
 
-            // Unikal təmiz otaq strukturu generatası p2p-xxxx
-            const generatedRoomId = 'p2p-' + Math.random().toString(36).substring(2, 6) + '-' + Math.random().toString(36).substring(2, 6);
-            
-            await setupPeer(generatedRoomId);
-            currentRoomId = generatedRoomId;
-
-            document.getElementById('room-limit-display').innerText = roomMaxLimit + 1; // +1 özü daxil
-            executeRoomTransition();
-
-            // Gələn qoşulma sorğularını qəbul etmək
-            peer.on('connection', (conn) => {
-                handleIncomingDataConnection(conn);
-            });
-
-            peer.on('call', (call) => {
-                // Sahibin otağında cari say limitini yoxla
-                const totalActive = Object.keys(connectedPeers).length + 1;
-                if(totalActive >= (roomMaxLimit + 1)) {
-                    // Limiti keçibsə rədd et, data connection ilə imtina göndər
-                    return;
-                }
-                call.answer(localStream);
-                handleIncomingCall(call);
-            });
-        }
-
-        // JOIN DIRECT VIA CODE
-        async function joinRoomDirect() {
-            const targetRoomId = document.getElementById('room-id-input').value.trim();
-            if(!targetRoomId) return;
-
-            await initMedia();
-            await setupPeer(); // Avtomatik random ID ilə öz peer-ini quraşdırır
-
-            currentRoomId = targetRoomId;
-            executeRoomTransition();
-
-            // Əvvəlcə otaq sahibinə data kanalı açırıq ki limit yoxlanılsın
-            const dataConn = peer.connect(targetRoomId);
-            handleIncomingDataConnection(dataConn);
-
-            // Zəng et
-            const call = peer.call(targetRoomId, localStream);
-            handleIncomingCall(call);
-
-            peer.on('call', (incomingCall) => {
-                incomingCall.answer(localStream);
-                handleIncomingCall(incomingCall);
-            });
-            
-            peer.on('connection', (conn) => {
-                handleIncomingDataConnection(conn);
-            });
-        }
-
-        // UI TRANSITION SETUP
-        function executeRoomTransition() {
-            document.getElementById('lobby-screen').classList.add('hidden');
-            document.getElementById('room-screen').classList.remove('hidden');
-            document.getElementById('current-room-display').innerText = currentRoomId;
-            updateParticipantUI();
-        }
-
-        // HOOK DATA CHANNELS
-        function handleIncomingDataConnection(conn) {
-            activeConnections[conn.peer] = conn;
             conn.on('data', (data) => {
-                if(data.type === 'room-meta') {
-                    // Host-dan gələn limit datasını tətbiq et
-                    roomMaxLimit = data.limit;
-                    document.getElementById('room-limit-display').innerText = roomMaxLimit + 1;
-                }
-                if(data.type === 'rejected-full') {
-                    alert(dictionary[currentLang].toastMax);
-                    leaveRoom();
-                }
-                if(data.type === 'sync-status') {
-                    toggleRemoteStatusIndicators(conn.peer, data.mediaType, data.enabled);
+                if (data.type === 'chat') {
+                    appendChatMessage(conn.peer.substring(0, 5), data.message, false);
+                } else if (data.type === 'code') {
+                    const el = document.getElementById('codeTextArea');
+                    if(el.value !== data.code) el.value = data.code; // Sync text engine inside UI
+                } else if (data.type === 'config' && !isHost) {
+                    roomMaxPeers = data.max;
+                    updatePeerCount();
                 }
             });
 
-            conn.on('open', () => {
-                // Əgər otaq sahibiyiksə, qoşulana limit məlumatlarını ötürək
-                if(peer.id === currentRoomId) {
-                    const totalActive = Object.keys(connectedPeers).length + 1;
-                    if(totalActive > (roomMaxLimit + 1)) {
-                        conn.send({type: 'rejected-full'});
-                        return;
-                    }
-                    conn.send({type: 'room-meta', limit: roomMaxLimit});
-                    // Digər otaq iştirakçılarını da yeni gələnə ötürmək zəncirvari P2P şəbəkəsi qurur (Full Mesh)
-                    broadcastToAll({type: 'update-mesh'});
-                }
+            conn.on('close', () => {
+                removeRemoteVideo(conn.peer);
+                connections = connections.filter(c => c.peer !== conn.peer);
+                updatePeerCount();
             });
         }
 
-        // HOOK MEDIA CALLS
-        function handleIncomingCall(call) {
-            connectedPeers[call.peer] = call;
+        // Create Secure Cryptographic Room
+        async function createRoom() {
+            await initMedia();
+            isHost = true;
+            roomMaxPeers = parseInt(document.getElementById('maxUsersInput').value) || 5;
             
+            const randomId = 'omni-' + Math.random().toString(36).substring(2, 6) + '-' + Math.random().toString(36).substring(2, 6);
+            activeRoomId = await setupPeer(randomId);
+
+            document.getElementById('displayRoomId').innerText = activeRoomId;
+            document.getElementById('lobbyScreen').classList.add('hidden');
+            document.getElementById('appWorkspace').classList.remove('hidden');
+            updatePeerCount();
+            appendChatMessage("SYSTEM", "P2P Secure Bridge Established.", true);
+        }
+
+        // Join Existing Cryptographic Room Axis
+        async function joinRoom() {
+            const idInput = document.getElementById('roomCodeInput').value.trim();
+            if(!idInput) return alert("Zəhmət olmasa düzgün otaq kodu daxil edin.");
+
+            await initMedia();
+            isHost = false;
+            activeRoomId = idInput;
+            
+            await setupPeer(); // Auto assigned random client ID
+
+            // Connect to host control entity
+            const conn = peer.connect(activeRoomId);
+            handleDataConnection(conn);
+
+            // Call to stream data feed
+            const call = peer.call(activeRoomId, localStream);
             call.on('stream', (remoteStream) => {
-                injectRemoteVideo(call.peer, remoteStream);
+                addRemoteVideo(call.peer, remoteStream);
             });
 
-            call.on('close', () => {
-                removeRemoteVideo(call.peer);
-            });
-
-            updateParticipantUI();
-            showToast('toastJoin');
+            document.getElementById('displayRoomId').innerText = activeRoomId;
+            document.getElementById('lobbyScreen').classList.add('hidden');
+            document.getElementById('appWorkspace').classList.remove('hidden');
+            updatePeerCount();
+            appendChatMessage("SYSTEM", "Connected to Bridge Client.", true);
         }
 
-        // INJECT VIDEO ELEMENT TO MESH GRID
-        function injectRemoteVideo(peerId, stream) {
-            if(document.getElementById(`card-${peerId}`)) return;
+        // Render Remote Participant Videos Safely
+        function addRemoteVideo(peerId, stream) {
+            if(document.getElementById('vid-' + peerId)) return;
 
-            const grid = document.getElementById('video-grid');
-            const card = document.createElement('div');
-            card.id = `card-${peerId}`;
-            card.className = "relative bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 group aspect-video shadow-xl";
-            
+            const grid = document.getElementById('videoGrid');
+            const wrapper = document.createElement('div');
+            wrapper.id = 'vid-' + peerId;
+            wrapper.className = "relative aspect-video bg-gray-950 rounded-xl overflow-hidden border border-gray-800 group shadow-md";
+
             const video = document.createElement('video');
             video.srcObject = stream;
             video.autoplay = true;
-            video.playsinline = true;
-            video.className = "w-full h-full";
+            video.playsInline = true;
+            video.className = "w-full h-full object-cover";
 
-            const label = document.createElement('div');
-            label.className = "absolute bottom-3 left-3 bg-slate-900/80 backdrop-blur px-3 py-1 rounded-lg text-xs font-bold text-slate-300 border border-slate-700/50";
-            label.innerText = `Peer [${peerId.substring(4, 8)}]`;
+            const badge = document.createElement('div');
+            badge.className = "absolute bottom-2 left-2 bg-gray-900/80 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-medium border border-gray-700 text-gray-300 z-10";
+            badge.innerText = `Peer [${peerId.substring(0,5)}]`;
 
-            // Remote Status Overlays
-            const overlay = document.createElement('div');
-            overlay.className = "absolute top-3 right-3 flex space-x-2";
-            overlay.innerHTML = `
-                <div id="mic-${peerId}" class="hidden h-7 w-7 rounded-full bg-red-500/80 flex items-center justify-center text-white text-xs"><i class="fa-solid fa-microphone-slash"></i></div>
-                <div id="cam-${peerId}" class="hidden h-7 w-7 rounded-full bg-red-500/80 flex items-center justify-center text-white text-xs"><i class="fa-solid fa-video-slash"></i></div>
-            `;
-
-            card.appendChild(video);
-            card.appendChild(label);
-            card.appendChild(overlay);
-            grid.appendChild(card);
-            
-            updateParticipantUI();
+            wrapper.appendChild(video);
+            wrapper.appendChild(badge);
+            grid.appendChild(wrapper);
         }
 
-        // REMOVE FROM MESH
+        // Clear dynamic elements on disconnection
         function removeRemoteVideo(peerId) {
-            const card = document.getElementById(`card-${peerId}`);
-            if(card) card.remove();
-            if(connectedPeers[peerId]) delete connectedPeers[peerId];
-            if(activeConnections[peerId]) delete activeConnections[peerId];
-            updateParticipantUI();
-            showToast('toastLeave');
+            const el = document.getElementById('vid-' + peerId);
+            if(el) el.remove();
         }
 
-        // MULTICAST DATA PACKETS
-        function broadcastToAll(packet) {
-            Object.values(activeConnections).forEach(conn => {
-                if(conn.open) conn.send(packet);
-            });
-        }
-
-        // COUNTER SYNCHRONIZATION
-        function updateParticipantUI() {
-            const count = Object.keys(connectedPeers).length + 1;
-            document.getElementById('participant-count').innerText = count;
-        }
-
-        // REMOTE AUDIO/VIDEO VISUAL STATE MANAGER
-        function toggleRemoteStatusIndicators(peerId, mediaType, isEnabled) {
-            const indicator = document.getElementById(`${mediaType === 'audio' ? 'mic' : 'cam'}-${peerId}`);
-            if(indicator) {
-                if(isEnabled) indicator.classList.add('hidden');
-                else indicator.classList.remove('hidden');
+        // Tracking Peer Connections Count Matrix
+        function updatePeerCount() {
+            const currentTotal = connections.length + 1; 
+            document.getElementById('participantCount').innerText = `${currentTotal} / ${roomMaxPeers + 1}`;
+            
+            if (isHost) {
+                connections.forEach(c => {
+                    c.send({ type: 'config', max: roomMaxPeers });
+                });
             }
         }
 
-        // AUDIO TOGGLE (MUTE/UNMUTE)
+        // Live Chat Messaging Logic Engine
+        function sendChatMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById('chatInputField');
+            const msg = input.value.trim();
+            if(!msg) return;
+
+            // Broadcast message frame to all peer pipes
+            connections.forEach(c => {
+                c.send({ type: 'chat', message: msg });
+            });
+
+            appendChatMessage("Siz", msg, false, true);
+            input.value = '';
+        }
+
+        function appendChatMessage(sender, text, isSystem = false, isMe = false) {
+            const container = document.getElementById('chatMessageArea');
+            const div = document.createElement('div');
+            
+            if(isSystem) {
+                div.className = "text-center text-[11px] font-semibold text-cyan-400 bg-cyan-950/20 py-1.5 px-3 rounded-lg border border-cyan-900/30 tracking-wide";
+                div.innerText = text;
+            } else {
+                div.className = `flex flex-col max-w-[85%] ${isMe ? 'ml-auto items-end' : 'mr-auto items-start'}`;
+                div.innerHTML = `
+                    <span class="text-[10px] text-gray-500 mb-0.5 font-medium px-1">${sender}</span>
+                    <div class="p-2.5 rounded-xl text-sm leading-relaxed border ${isMe ? 'bg-cyan-600 border-cyan-500 text-white rounded-tr-none' : 'bg-gray-800 border-gray-700 text-gray-100 rounded-tl-none'}">
+                        ${text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}
+                    </div>
+                `;
+            }
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Real-Time Code Sync Engine Broadcast Pipeline
+        function broadcastCodeUpdate() {
+            const codeVal = document.getElementById('codeTextArea').value;
+            connections.forEach(c => {
+                c.send({ type: 'code', code: codeVal });
+            });
+        }
+
+        // Unified Workspace Navigation Module
+        function switchTab(tab) {
+            const btnChat = document.getElementById('tabChat');
+            const btnCode = document.getElementById('tabCode');
+            const panelChat = document.getElementById('panelChat');
+            const panelCode = document.getElementById('panelCode');
+
+            if(tab === 'chat') {
+                btnChat.className = "flex-1 py-2 text-center text-xs font-semibold rounded-lg transition-all text-white bg-gray-800";
+                btnCode.className = "flex-1 py-2 text-center text-xs font-semibold rounded-lg transition-all text-gray-400 hover:text-white";
+                panelChat.classList.remove('hidden');
+                panelCode.classList.add('hidden');
+            } else {
+                btnCode.className = "flex-1 py-2 text-center text-xs font-semibold rounded-lg transition-all text-white bg-gray-800";
+                btnChat.className = "flex-1 py-2 text-center text-xs font-semibold rounded-lg transition-all text-gray-400 hover:text-white";
+                panelCode.classList.remove('hidden');
+                panelChat.classList.add('hidden');
+            }
+        }
+
+        // Multimedia Asset Mute/Freeze Triggers
         function toggleAudio() {
-            if(!localStream) return;
             const audioTrack = localStream.getAudioTracks()[0];
             if(audioTrack) {
                 audioTrack.enabled = !audioTrack.enabled;
-                const icon = document.getElementById('icon-audio');
-                const btn = document.getElementById('btn-toggle-audio');
-                const indicator = document.getElementById('status-mic-off');
-
-                if(audioTrack.enabled) {
-                    icon.className = "fa-solid fa-microphone";
-                    btn.className = "h-14 w-14 rounded-full bg-cyan-600 hover:bg-cyan-500 text-white flex items-center justify-center transition-all shadow-lg text-lg";
-                    indicator.classList.add('hidden');
-                } else {
-                    icon.className = "fa-solid fa-microphone-slash";
-                    btn.className = "h-14 w-14 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center transition-all shadow-lg text-lg";
-                    indicator.classList.remove('hidden');
-                }
-                broadcastToAll({type: 'sync-status', mediaType: 'audio', enabled: audioTrack.enabled});
+                const path = document.getElementById('micIconPath');
+                document.getElementById('micBtn').classList.toggle('bg-red-600');
+                document.getElementById('micBtn').classList.toggle('bg-gray-800');
             }
         }
 
-        // VIDEO TOGGLE (ON/OFF)
         function toggleVideo() {
-            if(!localStream) return;
             const videoTrack = localStream.getVideoTracks()[0];
             if(videoTrack) {
                 videoTrack.enabled = !videoTrack.enabled;
-                const icon = document.getElementById('icon-video');
-                const btn = document.getElementById('btn-toggle-video');
-                const indicator = document.getElementById('status-cam-off');
+                document.getElementById('camBtn').classList.toggle('bg-red-600');
+                document.getElementById('camBtn').classList.toggle('bg-gray-800');
+            }
+        }
 
-                if(videoTrack.enabled) {
-                    icon.className = "fa-solid fa-video";
-                    btn.className = "h-14 w-14 rounded-full bg-cyan-600 hover:bg-cyan-500 text-white flex items-center justify-center transition-all shadow-lg text-lg";
-                    indicator.classList.add('hidden');
-                } else {
-                    icon.className = "fa-solid fa-video-slash";
-                    btn.className = "h-14 w-14 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center transition-all shadow-lg text-lg";
-                    indicator.classList.remove('hidden');
+        // Screen Bridge (Ekran Paylaşımı) Fix Engine
+        async function toggleScreenShare() {
+            const screenBtn = document.getElementById('screenBtn');
+            if (!screenStream) {
+                try {
+                    screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+                    const track = screenStream.getVideoTracks()[0];
+                    
+                    // Replace video tracks for active stream interfaces across P2P lines
+                    connections.forEach(c => {
+                        const peerId = c.peer;
+                        const senders = peer.connections[peerId];
+                        if (senders) {
+                            senders.forEach(pc => {
+                                if(pc.peerConnection) {
+                                    const sender = pc.peerConnection.getSenders().find(s => s.track.kind === 'video');
+                                    if(sender) sender.replaceTrack(track);
+                                }
+                            });
+                        }
+                    });
+
+                    document.getElementById('localVideo').srcObject = screenStream;
+                    screenBtn.classList.remove('text-cyan-400');
+                    screenBtn.classList.add('bg-cyan-500', 'text-white');
+
+                    track.onended = () => stopScreenShare();
+                } catch (err) {
+                    console.error("Ekran paylaşımı aktivasiya xətası", err);
                 }
-                broadcastToAll({type: 'sync-status', mediaType: 'video', enabled: videoTrack.enabled});
+            } else {
+                stopScreenShare();
             }
         }
 
-        // UTILITY: UTILS TO COPY LINK
-        function copyRoomLink() {
-            if(!currentRoomId) return;
-            const link = window.location.origin + window.location.pathname + '?room=' + currentRoomId;
-            navigator.clipboard.writeText(link).then(() => {
-                showToast('toastCopy');
+        function stopScreenShare() {
+            if(!screenStream) return;
+            screenStream.getTracks().forEach(t => t.stop());
+            screenStream = null;
+
+            const videoTrack = localStream.getVideoTracks()[0];
+            connections.forEach(c => {
+                const peerId = c.peer;
+                const senders = peer.connections[peerId];
+                if (senders) {
+                    senders.forEach(pc => {
+                        if(pc.peerConnection) {
+                            const sender = pc.peerConnection.getSenders().find(s => s.track.kind === 'video');
+                            if(sender && videoTrack) sender.replaceTrack(videoTrack);
+                        }
+                    });
+                }
             });
+
+            document.getElementById('localVideo').srcObject = localStream;
+            const screenBtn = document.getElementById('screenBtn');
+            screenBtn.classList.add('text-cyan-400');
+            screenBtn.classList.remove('bg-cyan-500', 'text-white');
         }
 
-        // DISCONNECT ROUTINE
-        function leaveRoom() {
-            if(localStream) {
-                localStream.getTracks().forEach(track => track.stop());
-                localStream = null;
-            }
-            if(peer) {
-                peer.destroy();
-            }
-            // Səhifəni tam ilkin vəziyyətinə sıfırla
-            window.location.href = window.location.origin + window.location.pathname;
+        // Auxiliary Features
+        function copyRoomId() {
+            navigator.clipboard.writeText(activeRoomId);
+            alert("Otaq kodu mübadilə buferinə kopyalandı!");
         }
+
+        function disconnectCall() {
+            window.location.reload();
+        }
+
+        // Initialize Native Default Target Language Settings
+        changeLanguage('az');
     </script>
 </body>
 </html>
