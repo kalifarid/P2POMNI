@@ -3,208 +3,193 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>P2POMNI — Global P2P Supreme Bridge</title>
+    <title>P2POMNI — Category-Based P2P Bridge</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: radial-gradient(circle at center, #0f111a 0%, #05060b 100%); }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: radial-gradient(circle at center, #0a0b10 0%, #030407 100%); }
         .mono { font-family: 'JetBrains Mono', sans-serif; }
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-track { background: #0b0d14; }
-        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 9px; }
-        ::-webkit-scrollbar-thumb:hover { background: #334155; }
-        .active-tab { background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%) !important; color: white !important; box-shadow: 0 4px 12px rgba(6, 182, 212, 0.25); }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #07080d; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+        .active-category { background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%) !important; color: white !important; font-weight: 700; box-shadow: 0 4px 20px rgba(6, 182, 212, 0.15); }
     </style>
 </head>
 <body class="h-full text-slate-100 flex flex-col overflow-hidden select-none">
 
-    <!-- SETUP & LOBBY SYSTEM -->
-    <div id="lobbyContainer" class="fixed inset-0 z-50 bg-[#06070d] flex items-center justify-center p-4 overflow-y-auto">
-        <div class="w-full max-w-lg bg-slate-900/40 backdrop-blur-2xl border border-slate-800/80 rounded-3xl p-6 md:p-8 shadow-2xl relative">
-            
-            <!-- Language Bar inside Lobby -->
-            <div class="flex justify-center gap-1.5 mb-6 bg-black/40 p-1 rounded-2xl border border-slate-800 w-fit mx-auto">
-                <button onclick="setLanguage('az')" class="lang-btn px-2.5 py-1 rounded-xl text-xs font-semibold transition-all bg-cyan-600 text-white" data-l="az">🇦🇿 AZ</button>
-                <button onclick="setLanguage('en')" class="lang-btn px-2.5 py-1 rounded-xl text-xs font-semibold transition-all text-slate-400 hover:text-white" data-l="en">🇺🇸 EN</button>
-                <button onclick="setLanguage('tr')" class="lang-btn px-2.5 py-1 rounded-xl text-xs font-semibold transition-all text-slate-400 hover:text-white" data-l="tr">🇹🇷 TR</button>
-                <button onclick="setLanguage('ru')" class="lang-btn px-2.5 py-1 rounded-xl text-xs font-semibold transition-all text-slate-400 hover:text-white" data-l="ru">🇷🇺 RU</button>
-                <button onclick="setLanguage('zh')" class="lang-btn px-2.5 py-1 rounded-xl text-xs font-semibold transition-all text-slate-400 hover:text-white" data-l="zh">🇨🇳 ZH</button>
-            </div>
-
-            <div class="text-center mb-8">
-                <h1 class="text-3xl font-extrabold bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 bg-clip-text text-transparent tracking-tight">P2POMNI</h1>
-                <p id="lblSub" class="text-xs text-slate-400 uppercase tracking-widest font-semibold mt-1">Global P2P Bridge Network</p>
-            </div>
-
-            <!-- Options Grid -->
-            <div class="grid grid-cols-2 gap-4 mb-6">
-                <button onclick="switchLobbyMode('create')" id="lblTabCreate" class="py-3 rounded-xl bg-slate-800 text-sm font-bold border border-slate-700/50 transition-all text-white shadow-lg shadow-cyan-500/10 border-cyan-500/30">Otaq Yarat</button>
-                <button onclick="switchLobbyMode('join')" id="lblTabJoin" class="py-3 rounded-xl bg-slate-950/40 text-sm font-bold border border-slate-900 transition-all text-slate-400 hover:text-white">Otağa Qoşul</button>
-            </div>
-
-            <!-- Form Area -->
-            <div id="formCreate" class="space-y-4">
-                <div>
-                    <label id="lblUserLimit" class="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wider">İştirakçı Limiti</label>
-                    <input type="text" id="inputLimit" value="Unlimited" placeholder="Məs: 5 və ya Unlimited" class="w-full bg-black/40 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500 transition-colors">
-                </div>
-                <button onclick="actionCreateRoom()" id="btnGen" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-3.5 rounded-xl text-sm shadow-xl shadow-cyan-500/10 transition-all transform active:scale-[0.99]">Körpünü Başlat və Kod Yarat</button>
-            </div>
-
-            <div id="formJoin" class="space-y-4 hidden">
-                <div>
-                    <label id="lblEnterCode" class="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wider">4 Rəqəmli Giriş Kodu</label>
-                    <input type="text" id="inputJoinCode" maxlength="4" placeholder="Məs: 7392" class="w-full bg-black/40 border border-slate-800 rounded-xl px-4 py-3 text-center tracking-widest text-xl font-bold text-cyan-400 focus:outline-none focus:border-cyan-500 transition-colors mono">
-                </div>
-                <button onclick="actionJoinRoom()" id="btnConn" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold py-3.5 rounded-xl text-sm shadow-xl shadow-emerald-500/10 transition-all transform active:scale-[0.99]">Otağa Qoşul</button>
-            </div>
-
-            <!-- Dynamic Post-Creation Info Container -->
-            <div id="roomResultBlock" class="mt-6 p-4 bg-black/50 border border-slate-800 rounded-2xl text-center hidden space-y-3">
-                <span id="lblRoomActive" class="text-[11px] font-bold text-amber-400 uppercase tracking-widest block">Otaq Hazırdır (Qoşulma Kodu 2 dəqiqə etibarlıdır!)</span>
-                <div class="flex items-center justify-center gap-3">
-                    <span id="generatedCodeDisplay" class="text-4xl font-black text-white tracking-widest mono">0000</span>
-                    <div id="timerDisplay" class="bg-red-500/10 border border-red-500/30 text-red-400 px-2 py-1 rounded-md text-xs font-mono font-bold">02:00</div>
-                </div>
-                <button onclick="copyBridgeLink()" id="btnCopyLink" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-xs font-medium rounded-lg border border-slate-700 text-slate-300 transition-all">Qoşulma Linkini Kopyala</button>
-                <div class="pt-2">
-                    <button onclick="enterWorkspace()" id="btnEnterWorkspace" class="px-6 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl text-xs font-bold transition-all">İş Sahəsinə Daxil Ol →</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MAIN CORE RUNTIME WORKSPACE -->
-    <header class="bg-slate-900/60 backdrop-blur-md border-b border-slate-800/60 px-4 py-3 flex items-center justify-between shrink-0 z-40">
+    <!-- GLOBAL HEADER -->
+    <header class="bg-slate-950/60 backdrop-blur-md border-b border-slate-900 px-6 py-4 flex items-center justify-between shrink-0 z-50">
         <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-bold text-white shadow-md shadow-cyan-500/10 text-lg">Ω</div>
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-bold text-white text-xl shadow-lg shadow-cyan-500/10">Ω</div>
             <div>
-                <h2 class="font-bold text-sm tracking-wide text-white leading-none">P2POMNI</h2>
-                <span class="text-[9px] text-slate-500 font-mono" id="roomMetadataDisplay">ID: None</span>
+                <h2 class="font-extrabold text-base tracking-wide text-white leading-none">P2POMNI</h2>
+                <span class="text-[10px] text-slate-500 font-mono uppercase tracking-wider" id="globalStatus">Sistem Hazırdır • Kateqoriya Seçin</span>
             </div>
         </div>
-        <!-- Internal Live Lang Toggler -->
-        <div class="flex gap-1 bg-black/20 p-1 rounded-xl border border-slate-800/50">
-            <button onclick="setLanguage('az')" class="px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all lang-indicator" id="ind-az">AZ</button>
-            <button onclick="setLanguage('en')" class="px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all lang-indicator" id="ind-en">EN</button>
-            <button onclick="setLanguage('tr')" class="px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all lang-indicator" id="ind-tr">TR</button>
-            <button onclick="setLanguage('ru')" class="px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all lang-indicator" id="ind-ru">RU</button>
-            <button onclick="setLanguage('zh')" class="px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all lang-indicator" id="ind-zh">ZH</button>
+        
+        <!-- Multi-language Quick Support -->
+        <div class="flex gap-1 bg-black/40 p-1 rounded-xl border border-slate-850">
+            <button onclick="changeSystemLanguage('az')" class="px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all lang-ind bg-cyan-600 text-white" id="l-az">AZ</button>
+            <button onclick="changeSystemLanguage('en')" class="px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all lang-ind text-slate-400" id="l-en">EN</button>
+            <button onclick="changeSystemLanguage('tr')" class="px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all lang-ind text-slate-400" id="l-tr">TR</button>
+            <button onclick="changeSystemLanguage('ru')" class="px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all lang-ind text-slate-400" id="l-ru">RU</button>
+            <button onclick="changeSystemLanguage('zh')" class="px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all lang-ind text-slate-400" id="l-zh">ZH</button>
         </div>
     </header>
 
+    <!-- CORE DESKTOP VIEWPORT -->
     <div class="flex-1 flex min-h-0 w-full relative">
         
-        <!-- LEFT CATEGORY SYSTEM SIDEBAR -->
-        <nav class="w-16 md:w-56 bg-slate-950/60 border-r border-slate-800/60 flex flex-col items-center md:items-stretch p-2 gap-1.5 shrink-0">
-            <span id="lblCat" class="hidden md:block text-[10px] font-bold uppercase text-slate-500 tracking-widest px-3 py-2">Kateqoriyalar</span>
-            <button onclick="setActiveCategory('media')" id="catBtn-media" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-slate-400 hover:bg-slate-900 active-tab">
-                <span>📹</span> <span class="hidden md:inline" id="menuMedia">Media & Video</span>
+        <!-- STEP 1: LEFT NAVIGATION (ALWAYS ACTIVE CATEGORIES) -->
+        <nav class="w-20 md:w-64 bg-slate-950/80 border-r border-slate-900 flex flex-col p-3 gap-2 shrink-0 z-40">
+            <span id="navHeader" class="hidden md:block text-[11px] font-bold uppercase text-slate-600 tracking-widest px-3 py-2">Körpü Kateqoriyaları</span>
+            
+            <button onclick="selectCategory('media')" id="cat-media" class="w-full flex flex-col md:flex-row items-center gap-3 px-3 py-3.5 rounded-xl text-sm font-medium transition-all text-slate-400 hover:bg-slate-900/60 active-category">
+                <span class="text-lg">📹</span> <span class="text-[10px] md:text-sm tracking-wide" id="m-media">Media & Video</span>
             </button>
-            <button onclick="setActiveCategory('chat')" id="catBtn-chat" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-slate-400 hover:bg-slate-900">
-                <span>💬</span> <span class="hidden md:inline" id="menuChat">Chat Bridge</span>
+            <button onclick="selectCategory('chat')" id="cat-chat" class="w-full flex flex-col md:flex-row items-center gap-3 px-3 py-3.5 rounded-xl text-sm font-medium transition-all text-slate-400 hover:bg-slate-900/60">
+                <span class="text-lg">💬</span> <span class="text-[10px] md:text-sm tracking-wide" id="m-browser">Chat Bridge</span>
             </button>
-            <button onclick="setActiveCategory('secret')" id="catBtn-secret" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-slate-400 hover:bg-slate-900">
-                <span>🥷</span> <span class="hidden md:inline" id="menuSecret">Gizli Sözlər</span>
+            <button onclick="selectCategory('secret')" id="cat-secret" class="w-full flex flex-col md:flex-row items-center gap-3 px-3 py-3.5 rounded-xl text-sm font-medium transition-all text-slate-400 hover:bg-slate-900/60">
+                <span class="text-lg">🥷</span> <span class="text-[10px] md:text-sm tracking-wide" id="m-secret">Gizli Sözlər</span>
             </button>
-            <button onclick="setActiveCategory('files')" id="catBtn-files" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-slate-400 hover:bg-slate-900">
-                <span>📁</span> <span class="hidden md:inline" id="menuFiles">Fayl Transferi</span>
+            <button onclick="selectCategory('files')" id="cat-files" class="w-full flex flex-col md:flex-row items-center gap-3 px-3 py-3.5 rounded-xl text-sm font-medium transition-all text-slate-400 hover:bg-slate-900/60">
+                <span class="text-lg">📁</span> <span class="text-[10px] md:text-sm tracking-wide" id="m-files">Fayl Transferi</span>
             </button>
-            <button onclick="setActiveCategory('games')" id="catBtn-games" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-slate-400 hover:bg-slate-900">
-                <span>🎮</span> <span class="hidden md:inline" id="menuGames">P2P Oyunlar</span>
+            <button onclick="selectCategory('games')" id="cat-games" class="w-full flex flex-col md:flex-row items-center gap-3 px-3 py-3.5 rounded-xl text-sm font-medium transition-all text-slate-400 hover:bg-slate-900/60">
+                <span class="text-lg">🎮</span> <span class="text-[10px] md:text-sm tracking-wide" id="m-games">P2P Oyunlar</span>
             </button>
-            <button onclick="setActiveCategory('camera')" id="catBtn-camera" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-slate-400 hover:bg-slate-900">
-                <span>📸</span> <span class="hidden md:inline" id="menuCamera">Qarşılıqlı Şəkil</span>
+            <button onclick="selectCategory('camera')" id="cat-camera" class="w-full flex flex-col md:flex-row items-center gap-3 px-3 py-3.5 rounded-xl text-sm font-medium transition-all text-slate-400 hover:bg-slate-900/60">
+                <span class="text-lg">📸</span> <span class="text-[10px] md:text-sm tracking-wide" id="m-camera">Qarşılıqlı Şəkil</span>
             </button>
         </nav>
 
-        <!-- DYNAMIC MAIN CONTENT PORT -->
-        <div class="flex-1 flex flex-col min-h-0 bg-[#0a0b12] p-4 relative">
+        <!-- DYNAMIC SPACE PORT -->
+        <div class="flex-1 flex flex-col min-h-0 bg-[#06070a] p-4 md:p-6 relative">
             
-            <!-- PANEL 1: MEDIA VIEWPORT -->
-            <div id="panel-media" class="panel-node flex-1 flex flex-col min-h-0">
-                <div id="videoContainerGrid" class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 p-2 overflow-y-auto content-start">
-                    <div class="relative bg-slate-950 border border-cyan-500/20 rounded-2xl overflow-hidden aspect-video shadow-md">
-                        <video id="viewLocal" autoplay muted playsinline class="w-full h-full object-cover"></video>
-                        <span class="absolute bottom-3 left-3 bg-slate-900/80 px-2 py-0.5 rounded text-[10px] text-cyan-400 border border-slate-700">Siz (Local)</span>
+            <!-- STEP 2: CATEGORY GATEWAY LOBBY (SHOWN BEFORE ROOM IS ACTIVE) -->
+            <div id="categoryLobbyGateway" class="absolute inset-0 bg-[#06070a]/95 backdrop-blur-md z-30 flex items-center justify-center p-4">
+                <div class="w-full max-w-md bg-slate-900/40 border border-slate-800 rounded-3xl p-6 md:p-8 shadow-2xl space-y-6">
+                    <div class="text-center">
+                        <span id="gatewayTargetBadge" class="px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 rounded-full text-[11px] font-bold uppercase tracking-wider">MEDIA & VIDEO</span>
+                        <h3 id="gatewayTitle" class="text-xl font-bold text-white mt-3">Bu Kateqoriya üçün Otaq İdarəetməsi</h3>
+                        <p id="gatewayDesc" class="text-xs text-slate-400 mt-1">Otaq yaradın və ya mövcud təhlükəsiz koda qoşulun.</p>
                     </div>
-                </div>
-                <!-- Controls Row -->
-                <div class="p-3 bg-slate-900/30 border border-slate-800/80 rounded-2xl mt-3 flex items-center justify-center gap-4">
-                    <button onclick="triggerMuteAudio()" id="ctrlMic" class="w-11 h-11 rounded-xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition-all border border-slate-700 shadow">🎤</button>
-                    <button onclick="triggerMuteVideo()" id="ctrlCam" class="w-11 h-11 rounded-xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition-all border border-slate-700 shadow">📷</button>
-                    <button onclick="window.location.reload()" class="w-11 h-11 rounded-xl bg-red-600 hover:bg-red-700 text-white flex items-center justify-center transition-all shadow-md">❌</button>
+
+                    <div class="grid grid-cols-2 gap-3 bg-black/40 p-1 rounded-xl border border-slate-900">
+                        <button onclick="toggleGatewayTab('create')" id="tab-c" class="py-2.5 text-xs font-bold rounded-lg text-white bg-slate-800 shadow">Otaq Yarat</button>
+                        <button onclick="toggleGatewayTab('join')" id="tab-j" class="py-2.5 text-xs font-bold rounded-lg text-slate-400 hover:text-white">Otağa Qoşul</button>
+                    </div>
+
+                    <!-- CREATE ARCHITECTURE -->
+                    <div id="gateCreateBlock" class="space-y-4">
+                        <div>
+                            <label id="lblUserLimit" class="block text-[11px] font-medium text-slate-400 mb-1.5 uppercase tracking-wider">İştirakçı Limiti</label>
+                            <input type="text" id="roomLimitInput" value="Unlimited" class="w-full bg-black/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500">
+                        </div>
+                        <button onclick="executeRoomGeneration()" id="btnActionCreate" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 py-3.5 text-sm font-bold text-white rounded-xl shadow-lg shadow-cyan-500/10">Bu Bölmədə Otaq Yarat</button>
+                    </div>
+
+                    <!-- JOIN ARCHITECTURE -->
+                    <div id="gateJoinBlock" class="space-y-4 hidden">
+                        <div>
+                            <label id="lblEnterCode" class="block text-[11px] font-medium text-slate-400 mb-1.5 uppercase tracking-wider">4 Rəqəmli Giriş Kodu</label>
+                            <input type="text" id="roomJoinCodeInput" maxlength="4" placeholder="7302" class="w-full bg-black/60 border border-slate-800 rounded-xl px-4 py-3 text-center text-2xl font-black text-cyan-400 tracking-widest focus:outline-none focus:border-cyan-500 mono">
+                        </div>
+                        <button onclick="executeRoomConnection()" id="btnActionJoin" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 py-3.5 text-sm font-bold text-white rounded-xl shadow-lg shadow-emerald-500/10">Otağa Qoşul</button>
+                    </div>
+
+                    <!-- DYNAMIC TIMER & LINK RESPONSE BLOCK -->
+                    <div id="gateResponseBlock" class="bg-black/60 border border-slate-800 rounded-2xl p-4 text-center space-y-3 hidden">
+                        <span id="lblRoomActive" class="text-[10px] font-bold text-amber-400 uppercase tracking-widest block">Giriş Kodu Aktivdir (3 Dəqiqə Limit!)</span>
+                        <div class="flex items-center justify-center gap-3">
+                            <span id="dispCode" class="text-4xl font-black text-white tracking-widest mono">0000</span>
+                            <div id="dispTimer" class="bg-red-500/10 border border-red-500/30 text-red-400 px-2 py-1 rounded-md text-xs font-mono font-bold">03:00</div>
+                        </div>
+                        <button onclick="copyGatewayDirectLink()" id="btnCopyLink" class="w-full py-2 bg-slate-800 text-xs font-medium rounded-lg border border-slate-700 text-slate-300">Giriş Linkini Kopyala</button>
+                        <button onclick="dismissGatewayAndEnter()" id="btnEnterWorkspace" class="w-full py-2.5 bg-cyan-500 text-xs font-bold text-white rounded-xl">İş Sahəsinə Daxil Ol →</button>
+                    </div>
                 </div>
             </div>
 
-            <!-- PANEL 2: CHAT ENGINE -->
+            <!-- ========================================== -->
+            <!-- WORKSPACE PANELS (EACH INDEPENDENT)        -->
+            <!-- ========================================== -->
+
+            <!-- PANEL: MEDIA -->
+            <div id="panel-media" class="panel-node flex-1 flex flex-col min-h-0">
+                <div id="mediaGrid" class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 overflow-y-auto content-start">
+                    <div class="relative bg-slate-950 border border-cyan-500/20 rounded-2xl overflow-hidden aspect-video shadow-lg">
+                        <video id="localVideoNode" autoplay muted playsinline class="w-full h-full object-cover"></video>
+                        <span class="absolute bottom-3 left-3 bg-slate-900/90 px-2 py-0.5 rounded text-[10px] text-cyan-400 border border-slate-800">Siz</span>
+                    </div>
+                </div>
+                <div class="p-3 bg-slate-950 border border-slate-900 rounded-2xl mt-4 flex items-center justify-center gap-4 shrink-0">
+                    <button onclick="toggleAudioTrack()" id="btnMic" class="w-12 h-12 rounded-xl bg-slate-900 border border-slate-800 text-white flex items-center justify-center text-lg hover:bg-slate-800 transition-all">🎤</button>
+                    <button onclick="toggleVideoTrack()" id="btnCam" class="w-12 h-12 rounded-xl bg-slate-900 border border-slate-800 text-white flex items-center justify-center text-lg hover:bg-slate-800 transition-all">📷</button>
+                    <button onclick="leaveCurrentRoomState()" class="w-12 h-12 rounded-xl bg-red-600 text-white flex items-center justify-center text-lg shadow-md hover:bg-red-700 transition-all">❌</button>
+                </div>
+            </div>
+
+            <!-- PANEL: CHAT -->
             <div id="panel-chat" class="panel-node flex-1 flex flex-col min-h-0 hidden">
-                <div id="chatBoxFlow" class="flex-1 overflow-y-auto space-y-2.5 p-2 bg-black/10 rounded-2xl border border-slate-900"></div>
-                <form onsubmit="handleChatSubmit(event)" class="mt-3 flex items-center gap-2 shrink-0">
-                    <input type="text" id="chatInputField" placeholder="Mesajınızı daxil edin..." class="flex-1 bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500 text-white">
-                    <button type="submit" class="bg-cyan-500 hover:bg-cyan-600 px-5 py-3 rounded-xl font-bold text-sm text-white">Göndər</button>
+                <div id="chatFlowBox" class="flex-1 overflow-y-auto space-y-3 p-3 bg-black/20 rounded-2xl border border-slate-900"></div>
+                <form onsubmit="broadcastChatMessage(event)" class="mt-4 flex items-center gap-2 shrink-0">
+                    <input type="text" id="chatInput" placeholder="Mesajınızı daxil edin..." class="flex-1 bg-slate-950 border border-slate-900 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-cyan-500 text-white">
+                    <button type="submit" class="bg-cyan-500 hover:bg-cyan-600 px-6 py-3.5 rounded-xl font-bold text-sm text-white transition-colors">Göndər</button>
                 </form>
             </div>
 
-            <!-- PANEL 3: SECRET WORDS MODALITY -->
+            <!-- PANEL: SECRET -->
             <div id="panel-secret" class="panel-node flex-1 flex flex-col min-h-0 hidden max-w-xl mx-auto w-full justify-center">
-                <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-xl">
-                    <h3 id="lblSecTitle" class="text-lg font-bold text-cyan-400">Şifrəli Gizli Söz Körpüsü</h3>
-                    <p id="lblSecDesc" class="text-xs text-slate-400">Bura yazılan sözlər ekranda yalnız 5 saniyə görünür və yaddaşdan silinir.</p>
-                    <input type="text" id="inputSecretMsg" placeholder="Gizli mesajı bura yazın..." class="w-full bg-black/40 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-red-500 text-red-300 font-mono">
-                    <button onclick="sendSecretMessage()" id="btnSecSend" class="w-full bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white py-2.5 rounded-xl text-sm font-bold shadow-md">Gizli Sözü Göndər</button>
-                    <div id="secretRevealZone" class="min-h-[60px] bg-black/60 border border-dashed border-red-900/50 rounded-xl flex items-center justify-center p-3 text-center font-bold text-amber-400 tracking-wide text-sm"></div>
+                <div class="bg-slate-950 border border-slate-900 rounded-2xl p-6 space-y-4 shadow-xl">
+                    <h3 id="lblSecTitle" class="text-base font-bold text-cyan-400 tracking-wide">Şifrəli Gizli Söz Şəbəkəsi</h3>
+                    <p id="lblSecDesc" class="text-xs text-slate-500">Göndərilən mesaj ekranda yalnız 5 saniyə qalacaq və birdəfəlik məhv olacaq.</p>
+                    <input type="text" id="secretInput" placeholder="Gizli sözü daxil edin..." class="w-full bg-black/60 border border-slate-900 rounded-xl px-4 py-3 text-sm text-red-300 font-mono focus:outline-none focus:border-red-500">
+                    <button onclick="broadcastSecretMessage()" id="btnSecSend" class="w-full bg-gradient-to-r from-red-500 to-rose-600 py-2.5 rounded-xl text-xs font-bold text-white shadow-md">Gizli Sözü Uçur</button>
+                    <div id="secretRevealZone" class="min-h-[60px] bg-black border border-dashed border-slate-900 rounded-xl flex items-center justify-center p-3 text-center text-sm font-bold text-slate-600">Gözlənilir...</div>
                 </div>
             </div>
 
-            <!-- PANEL 4: FILE TRANSFER ENGINE -->
+            <!-- PANEL: FILES -->
             <div id="panel-files" class="panel-node flex-1 flex flex-col min-h-0 hidden max-w-xl mx-auto w-full justify-center">
-                <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 text-center space-y-4 shadow-xl">
-                    <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center text-2xl mx-auto">📁</div>
-                    <h3 id="lblFileTitle" class="text-base font-bold text-white">Yüksək Sürətli Birbaşa P2P Fayl Mübadiləsi</h3>
-                    <input type="file" id="filePicker" class="hidden" onchange="processFileSelection(this)">
-                    <button onclick="document.getElementById('filePicker').click()" id="lblPickFile" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all">Fayl Seçin</button>
-                    <div id="fileProgressBlock" class="text-xs font-mono text-cyan-400"></div>
+                <div class="bg-slate-950 border border-slate-900 rounded-2xl p-8 text-center space-y-4 shadow-xl">
+                    <div class="w-16 h-16 bg-slate-900 border border-slate-800 rounded-full flex items-center justify-center text-2xl mx-auto">📁</div>
+                    <h3 id="lblFileTitle" class="text-base font-bold text-white">Yüksək Sürətli Birbaşa P2P Fayl Paylaşımı</h3>
+                    <input type="file" id="filePicker" class="hidden" onchange="initiateFilePipeline(this)">
+                    <button onclick="document.getElementById('filePicker').click()" id="lblPickFile" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 px-5 py-3 rounded-xl text-xs font-semibold transition-all">Kompüterdən Fayl Seçin</button>
+                    <div id="fileProgressOutput" class="text-xs font-mono text-cyan-400"></div>
                 </div>
             </div>
 
-            <!-- PANEL 5: 10+ INTERACTIVE GAMES PARADIGM -->
+            <!-- PANEL: GAMES -->
             <div id="panel-games" class="panel-node flex-1 flex flex-col min-h-0 hidden">
-                <!-- Game Selection Dropdown Header -->
-                <div class="bg-slate-900/80 p-3 rounded-2xl border border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
-                    <div class="flex items-center gap-2">
-                        <span class="text-xl">🎮</span>
-                        <select id="gameSelector" onchange="loadSelectedGameArchitecture()" class="bg-black border border-slate-800 text-sm font-bold text-white rounded-xl p-2 focus:outline-none">
-                            <option value="tic">1. Tic-Tac-Toe (X-O)</option>
-                            <option value="click">2. Click Speed Battle (Klik Sürəti)</option>
-                            <option value="rps">3. Rock Paper Scissors (K0-Ka-Ça)</option>
-                            <option value="math">4. Speed Math Challenge</option>
-                            <option value="guess">5. Number Guessing (Rəqəm Tapmaca)</option>
-                            <option value="memory">6. Multi-Peer Memory Matrix</option>
-                            <option value="dice">7. Ultimate Dice Duel</option>
-                            <option value="coin">8. Quantum Coin Flipper</option>
-                            <option value="words">9. Fast Word Race</option>
-                            <option value="reaction">10. Reflex Reflex Test</option>
-                        </select>
-                    </div>
-                    <span class="text-xs font-mono text-emerald-400 bg-emerald-950/20 border border-emerald-900/30 px-3 py-1 rounded-xl">Multiplayer Sync Active</span>
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+                    <select id="activeGameSelector" onchange="renderGamePlaygroundEngine()" class="bg-black border border-slate-900 text-xs font-bold text-white rounded-lg p-2.5 focus:outline-none">
+                        <option value="tic">1. Tic-Tac-Toe (X-O Match)</option>
+                        <option value="click">2. Click Speed Duel (Klik Sürəti)</option>
+                        <option value="rps">3. Rock Paper Scissors (Daş-Kağız-Qayçı)</option>
+                        <option value="math">4. Quantum Speed Math</option>
+                        <option value="guess">5. Peer Number Guesser</option>
+                        <option value="dice">6. Dice Combat</option>
+                        <option value="coin">7. Coin Flip Matrix</option>
+                        <option value="reaction">8. Reflex Accelerator</option>
+                    </select>
+                    <span class="text-[10px] font-mono text-emerald-400 bg-emerald-950/20 border border-emerald-900/30 px-3 py-1 rounded-full">Sinxronizasiya Aktivdir</span>
                 </div>
-                <!-- Active Game Render Area -->
-                <div id="gamePlayground" class="flex-1 bg-black/30 border border-slate-900/60 rounded-2xl mt-4 p-4 overflow-y-auto flex items-center justify-center">
-                    <!-- Game specific DOM generated dynamically via Javascript below -->
-                </div>
+                <div id="gameArenaPort" class="flex-1 bg-black/10 border border-slate-900/60 rounded-2xl mt-4 p-4 flex items-center justify-center overflow-y-auto"></div>
             </div>
 
-            <!-- PANEL 6: CAMERA SYNC DUEL -->
+            <!-- PANEL: CAMERA -->
             <div id="panel-camera" class="panel-node flex-1 flex flex-col min-h-0 hidden max-w-xl mx-auto w-full justify-center">
-                <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 text-center space-y-4 shadow-xl">
+                <div class="bg-slate-950 border border-slate-900 rounded-2xl p-6 text-center space-y-4 shadow-xl">
                     <h3 id="lblCamTitle" class="text-base font-bold text-white">Qarşılıqlı Eyni Anda Şəkil Çəkmə</h3>
-                    <p id="lblCamDesc" class="text-xs text-slate-400">Şəkil çək düyməsinə basdıqda həm sizin, həm də qarşı tərəfin kamerası anlıq olaraq şəkil çəkir və bir-birinizə göndərir.</p>
-                    <button onclick="triggerSnapshotDuel()" id="btnSnap" class="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold px-6 py-3 rounded-xl text-sm shadow-lg transition-all">📸 Snapshot Çək</button>
+                    <p id="lblCamDesc" class="text-xs text-slate-500">Eyni anda hər iki tərəfdən çəkiliş başladılır və nəticələr çarpaz mübadilə olunur.</p>
+                    <button onclick="triggerCameraSnapshotDuel()" id="btnSnap" class="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold px-6 py-3 rounded-xl text-xs shadow-lg transition-all">📸 Snapshot Çək</button>
                     <div class="grid grid-cols-2 gap-3 pt-2">
-                        <div class="bg-black/40 p-2 rounded-xl border border-slate-800"><span class="text-[10px] block text-slate-500 mb-1">Sizin Şəkil</span><img id="imgLocalCapture" class="w-full aspect-video object-cover rounded bg-slate-900"></div>
-                        <div class="bg-black/40 p-2 rounded-xl border border-slate-800"><span class="text-[10px] block text-slate-500 mb-1">Qarşı Tərəf</span><img id="imgRemoteCapture" class="w-full aspect-video object-cover rounded bg-slate-900"></div>
+                        <div class="bg-black border border-slate-900 p-2 rounded-xl"><span class="text-[10px] block text-slate-500 mb-1">Sizin Şəkil</span><img id="imgLocal" class="w-full aspect-video object-cover rounded bg-slate-900"></div>
+                        <div class="bg-black border border-slate-900 p-2 rounded-xl"><span class="text-[10px] block text-slate-500 mb-1">Rəqibin Şəkili</span><img id="imgRemote" class="w-full aspect-video object-cover rounded bg-slate-900"></div>
                     </div>
                 </div>
             </div>
@@ -212,451 +197,456 @@
         </div>
     </div>
 
-    <!-- P2POMNI ENGINE ARCHITECTURE SCRIPT CODE -->
+    <!-- MAIN CORE SCRIPT ENGINE -->
     <script>
-        const dictionary = {
+        const langPack = {
             az: {
-                sub: "Global P2P Bridge Network", tabCreate: "Otaq Yarat", tabJoin: "Otağa Qoşul",
-                limit: "İştirakçı Limiti", btnGen: "Körpünü Başlat və Kod Yarat", enterCode: "4 Rəqəmli Giriş Kodu",
-                btnConn: "Otağa Qoşul", roomActive: "Otaq Hazırdır (Qoşulma Kodu 2 dəqiqə etibarlıdır!)",
-                copy: "Qoşulma Linkini Kopyala", enterWs: "İş Sahəsinə Daxil Ol →", categories: "Kateqoriyalar",
-                mMedia: "Media & Video", mChat: "Chat Bridge", mSecret: "Gizli Sözlər", mFiles: "Fayl Transferi",
-                mGames: "P2P Oyunlar", mCam: "Qarşılıqlı Şəkil", secTitle: "Şifrəli Gizli Söz Körpüsü",
-                secDesc: "Bura yazılan sözlər ekranda yalnız 5 saniyə görünür və yaddaşdan silinir.",
-                secBtn: "Gizli Sözü Göndər", fileTitle: "Yüksək Sürətli Birbaşa P2P Fayl Mübadiləsi",
-                pickFile: "Fayl Seçin", camTitle: "Qarşılıqlı Eyni Anda Şəkil Çəkmə",
-                camDesc: "Şəkil çək düyməsinə basdıqda həm sizin, həm də qarşı tərəfin kamerası anlıq olaraq şəkil çəkir və bir-birinizə göndərir.",
-                snapBtn: "Snapshot Çək"
+                mMedia: "Media & Video", mChat: "Chat Bridge", mSecret: "Gizli Sözlər", mFiles: "Fayl Transferi", mGames: "P2P Oyunlar", mCam: "Qarşılıqlı Şəkil",
+                title: "Otaq İdarəetməsi", desc: "Otaq yaradın və ya mövcud təhlükəsiz koda qoşulun.", tabC: "Otaq Yarat", tabJ: "Otağa Qoşul", limit: "İştirakçı Limiti",
+                btnC: "Bu Bölmədə Otaq Yarat", btnJ: "Otağa Qoşul", codeInp: "4 Rəqəmli Giriş Kodu", active: "Giriş Kodu Aktivdir (3 Dəqiqə Limit!)", link: "Giriş Linkini Kopyala",
+                ws: "İş Sahəsinə Daxil Ol →", navH: "Körpü Kateqoriyalar"
             },
             en: {
-                sub: "Global P2P Bridge Network", tabCreate: "Create Room", tabJoin: "Join Room",
-                limit: "Participant Limit", btnGen: "Start Bridge & Generate Code", enterCode: "4 Digit Entry Code",
-                btnConn: "Connect to Bridge", roomActive: "Room Active (Code valid for 2 minutes!)",
-                copy: "Copy Connection Link", enterWs: "Enter Workspace →", categories: "Categories",
-                mMedia: "Media & Video", mChat: "Chat Bridge", mSecret: "Secret Words", mFiles: "File Transfer",
-                mGames: "P2P Games", mCam: "Mutual Camera", secTitle: "Encrypted Secret Word Bridge",
-                secDesc: "Words typed here only stay visible for 5 seconds and self-destruct.",
-                secBtn: "Send Secret Word", fileTitle: "High-Speed Direct P2P File Exchange",
-                pickFile: "Choose File", camTitle: "Simultaneous Mutual Capture",
-                camDesc: "Triggering snapshot snaps your local frame and requests peer's immediate capture response.",
-                snapBtn: "Take Snapshot"
+                mMedia: "Media & Video", mChat: "Chat Bridge", mSecret: "Secret Words", mFiles: "File Transfer", mGames: "P2P Games", mCam: "Mutual Camera",
+                title: "Room Management", desc: "Create a private room or enter an active bridge code.", tabC: "Create Room", tabJ: "Join Room", limit: "Participant Limit",
+                btnC: "Create Category Room", btnJ: "Connect to Bridge", codeInp: "4 Digit Entry Code", active: "Entry Code Active (3 Mins Limit!)", link: "Copy Entry Link",
+                ws: "Enter Workspace →", navH: "Bridge Categories"
             },
             tr: {
-                sub: "Küresel P2P Köprü Ağı", tabCreate: "Oda Oluştur", tabJoin: "Odaya Katıl",
-                limit: "Katılımcı Sınırı", btnGen: "Köprüyü Başlat ve Kod Üret", enterCode: "4 Haneli Giriş Kodu",
-                btnConn: "Odaya Bağlan", roomActive: "Oda Hazır (Giriş Kodu 2 dakika geçerlidir!)",
-                copy: "Bağlantı Linkini Kopyala", enterWs: "Çalışma Alanına Gir →", categories: "Kategoriler",
-                mMedia: "Medya & Video", mChat: "Chat Bridge", mSecret: "Gizli Kelimeler", mFiles: "Dosya Transferi",
-                mGames: "P2P Oyunlar", mCam: "Karşılıklı Fotoğraf", secTitle: "Şifreli Gizli Kelime Köprüsü",
-                secDesc: "Buraya yazılan kelimeler ekranda sadece 5 saniye görünür ve kalıcı olarak silinir.",
-                secBtn: "Gizli Kelimeyi Gönder", fileTitle: "Yüksek Hızlı Doğrudan P2P Dosya Paylaşımı",
-                pickFile: "Dosya Seç", camTitle: "Karşılıklı Eşzamanlı Fotoğraf Çekimi",
-                camDesc: "Fotoğraf çek butonuna basıldığında hem sizin hem de karşı tarafın kamerası anlık olarak çekim yapar.",
-                snapBtn: "Fotoğraf Çek"
+                mMedia: "Medya & Video", mChat: "Chat Bridge", mSecret: "Gizli Kelimeler", mFiles: "Dosya Transferi", mGames: "P2P Oyunlar", mCam: "Karşılıklı Fotoğraf",
+                title: "Oda Yönetimi", desc: "Oda oluşturun veya aktif bir köprü koduna bağlanın.", tabC: "Oda Oluştur", tabJ: "Odaya Katıl", limit: "Katılımcı Sınırı",
+                btnC: "Bu Bölümde Oda Aç", btnJ: "Odaya Bağlan", codeInp: "4 Haneli Giriş Kodu", active: "Giriş Kodu Aktif (3 Dakika Limit!)", link: "Bağlantı Linkini Kopyala",
+                ws: "Çalışma Alanına Gir →", navH: "Köprü Kategorileri"
             },
             ru: {
-                sub: "Глобальная сеть P2P-мостов", tabCreate: "Создать комнату", tabJoin: "Войти в комнату",
-                limit: "Лимит участников", btnGen: "Запустить мост и создать код", enterCode: "4-значный код доступа",
-                btnConn: "Подключиться к комнате", roomActive: "Комната готова (Код действителен 2 минуты!)",
-                copy: "Копировать ссылку доступа", enterWs: "Войти в рабочую зону →", categories: "Категории",
-                mMedia: "Медиа и Видео", mChat: "Чат-мост", mSecret: "Секретные слова", mFiles: "Передача файлов",
-                mGames: "P2P Игры", mCam: "Взаимное фото", secTitle: "Шифрованный мост секретных слов",
-                secDesc: "Слова, написанные здесь, видны на экране всего 5 секунд, затем уничтожаются.",
-                secBtn: "Отправить секретное слово", fileTitle: "Высокоскоростной прямой P2P обмен файлами",
-                pickFile: "Выбрать файл", camTitle: "Взаимная одновременная съемка камеры",
-                camDesc: "При нажатии на кнопку съемки обе камеры делают мгновенный снимок и обмениваются ими.",
-                snapBtn: "Сделать снимок"
+                mMedia: "Медиа и Видео", mChat: "Чат-мост", mSecret: "Секретные слова", mFiles: "Передача файлов", mGames: "P2P Игры", mCam: "Взаимное фото",
+                title: "Управление комнатой", desc: "Создайте комнату или введите активный код моста.", tabC: "Создать", tabJ: "Войти", limit: "Лимит участников",
+                btnC: "Создать комнату здесь", btnJ: "Подключиться к мосту", codeInp: "4-значный код доступа", active: "Код активен (Лимит 3 минуты!)", link: "Копировать ссылку",
+                ws: "Войти в рабочую зону →", navH: "Категории мостов"
             },
             zh: {
-                sub: "全球 P2P 网桥架构", tabCreate: "创建房间", tabJoin: "加入房间",
-                limit: "参与者上限", btnGen: "启动网桥并生成代号", enterCode: "4位准入代码",
-                btnConn: "连接到网桥", roomActive: "房间就绪（加入代码有效时间仅限 2 分钟！）",
-                copy: "复制连接链结", enterWs: "进入核心工作区 →", categories: "系统目录",
-                mMedia: "媒体与视频节点", mChat: "实时聊天网桥", mSecret: "隐秘阅后即焚", mFiles: "直连文件传输",
-                mGames: "P2P 联机游戏", mCam: "双向对拍相机", secTitle: "端到端加密隐秘字桥",
-                secDesc: "此处输入的内容仅在对方屏幕显示 5 秒钟后即会自动彻底销毁。",
-                secBtn: "发送隐秘词", fileTitle: "极速双向对等网络文件直连闪传",
-                pickFile: "选择本地文件", camTitle: "远程对端同步瞬间拍摄",
-                camDesc: "点击拍摄按钮将触发本地摄像机捕捉，同时指令远端对等节点进行无延迟协同抓拍。",
-                snapBtn: "执行协同抓拍"
+                mMedia: "媒体视频节点", mChat: "实时聊天网桥", mSecret: "隐秘阅后即焚", mFiles: "直连文件传输", mGames: "P2P 联机游戏", mCam: "双向对拍相机",
+                title: "房间及准入管理", desc: "在该大类下创建独立对等节点或输入4位代码。", tabC: "创建节点", tabJ: "加入网桥", limit: "参与者人数上限",
+                btnC: "激活大类独立房间", btnJ: "执行网桥握手连接", codeInp: "4位大类准入代码", active: "代码已就绪（3分钟加入限时！）", link: "复制大类准入直连链结",
+                ws: "进入大类工作空间 →", navH: "全球对等体分类"
             }
         };
 
+        let currentCategory = 'media';
         let currentLang = 'az';
         let peer = null;
         let localStream = null;
-        let connections = [];
+        let activeConnections = [];
         let roomLimit = "Unlimited";
-        let fullPeerId = "";
-        let shortCode = "";
-        let codeValid = true;
-        let timerInterval = null;
+        let generatedCode = "";
+        let codeValidityTimer = null;
+        let isCodeValid = true;
 
-        // Score matrices for game platforms
-        let gameScoreLocal = 0;
-        let gameScoreRemote = 0;
+        // Dynamic category state trackers
+        let categoryActiveStates = { media: false, chat: false, secret: false, files: false, games: false, camera: false };
 
-        function setLanguage(lang) {
+        function changeSystemLanguage(lang) {
             currentLang = lang;
-            document.querySelectorAll('.lang-btn').forEach(b => {
-                if(b.getAttribute('data-l') === lang) {
-                    b.classList.remove('text-slate-400','hover:text-white');
-                    b.classList.add('bg-cyan-600','text-white');
-                } else {
-                    b.classList.remove('bg-cyan-600','text-white');
-                    b.classList.add('text-slate-400','hover:text-white');
-                }
-            });
-            document.querySelectorAll('.lang-indicator').forEach(i => {
-                i.className = i.id === `ind-${lang}` ? "px-2 py-0.5 rounded-lg text-[10px] font-bold bg-cyan-500 text-white lang-indicator" : "px-2 py-0.5 rounded-lg text-[10px] font-bold text-slate-400 hover:text-white lang-indicator";
+            document.querySelectorAll('.lang-ind').forEach(btn => {
+                btn.className = btn.id === `l-${lang}` ? "px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all lang-ind bg-cyan-600 text-white" : "px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all lang-ind text-slate-400";
             });
 
-            const d = dictionary[lang];
-            document.getElementById('lblSub').innerText = d.sub;
-            document.getElementById('lblTabCreate').innerText = d.tabCreate;
-            document.getElementById('lblTabJoin').innerText = d.tabJoin;
-            document.getElementById('lblUserLimit').innerText = d.limit;
-            document.getElementById('btnGen').innerText = d.btnGen;
-            document.getElementById('lblEnterCode').innerText = d.enterCode;
-            document.getElementById('btnConn').innerText = d.btnConn;
-            document.getElementById('lblRoomActive').innerText = d.roomActive;
-            document.getElementById('btnCopyLink').innerText = d.copy;
-            document.getElementById('btnEnterWorkspace').innerText = d.enterWs;
-            document.getElementById('lblCat').innerText = d.categories;
-            document.getElementById('menuMedia').innerText = d.mMedia;
-            document.getElementById('menuChat').innerText = d.mChat;
-            document.getElementById('menuSecret').innerText = d.mSecret;
-            document.getElementById('menuFiles').innerText = d.mFiles;
-            document.getElementById('menuGames').innerText = d.mGames;
-            document.getElementById('menuCamera').innerText = d.mCam;
-            document.getElementById('lblSecTitle').innerText = d.secTitle;
-            document.getElementById('lblSecDesc').innerText = d.secDesc;
-            document.getElementById('btnSecSend').innerText = d.secBtn;
-            document.getElementById('lblFileTitle').innerText = d.fileTitle;
-            document.getElementById('lblPickFile').innerText = d.pickFile;
-            document.getElementById('lblCamTitle').innerText = d.camTitle;
-            document.getElementById('lblCamDesc').innerText = d.camDesc;
-            document.getElementById('btnSnap').innerText = d.snapBtn;
+            const pack = langPack[lang];
+            document.getElementById('m-media').innerText = pack.mMedia;
+            document.getElementById('m-browser').innerText = pack.mChat;
+            document.getElementById('m-secret').innerText = pack.mSecret;
+            document.getElementById('m-files').innerText = pack.mFiles;
+            document.getElementById('m-games').innerText = pack.mGames;
+            document.getElementById('m-camera').innerText = pack.mCam;
+            document.getElementById('gatewayTitle').innerText = pack.title;
+            document.getElementById('gatewayDesc').innerText = pack.desc;
+            document.getElementById('tab-c').innerText = pack.tabC;
+            document.getElementById('tab-j').innerText = pack.tabJ;
+            document.getElementById('lblUserLimit').innerText = pack.limit;
+            document.getElementById('btnActionCreate').innerText = pack.btnC;
+            document.getElementById('lblEnterCode').innerText = pack.codeInp;
+            document.getElementById('btnActionJoin').innerText = pack.btnJ;
+            document.getElementById('lblRoomActive').innerText = pack.active;
+            document.getElementById('btnCopyLink').innerText = pack.link;
+            document.getElementById('btnEnterWorkspace').innerText = pack.ws;
+            document.getElementById('navHeader').innerText = pack.navH;
+            
+            updateGatewayUIState();
         }
 
-        function switchLobbyMode(mode) {
-            if(mode === 'create') {
-                document.getElementById('lblTabCreate').className = "py-3 rounded-xl bg-slate-800 text-sm font-bold border border-slate-700/50 transition-all text-white shadow-lg shadow-cyan-500/10 border-cyan-500/30";
-                document.getElementById('lblTabJoin').className = "py-3 rounded-xl bg-slate-950/40 text-sm font-bold border border-slate-900 transition-all text-slate-400 hover:text-white";
-                document.getElementById('formCreate').classList.remove('hidden');
-                document.getElementById('formJoin').classList.add('hidden');
+        function selectCategory(category) {
+            currentCategory = category;
+            
+            // Highlight left sidebar navigation UI
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-category'));
+            document.getElementById(`cat-${category}`).classList.add('active-category');
+
+            // Toggle Main panels visibility
+            document.querySelectorAll('.panel-node').forEach(p => p.classList.add('hidden'));
+            document.getElementById(`panel-${category}`).classList.remove('hidden');
+
+            updateGatewayUIState();
+
+            // Load sub-game engines seamlessly if category is games
+            if(category === 'games' && categoryActiveStates[category]) {
+                renderGamePlaygroundEngine();
+            }
+        }
+
+        function updateGatewayUIState() {
+            const currentBadge = document.getElementById('gatewayTargetBadge');
+            currentBadge.innerText = `${currentCategory.toUpperCase()} CATEGORY`;
+
+            if(categoryActiveStates[currentCategory] === true) {
+                document.getElementById('categoryLobbyGateway').classList.add('hidden');
+                document.getElementById('globalStatus').innerText = `Körpü Aktivdir: ${currentCategory.toUpperCase()} | Code: ${generatedCode}`;
             } else {
-                document.getElementById('lblTabJoin').className = "py-3 rounded-xl bg-slate-800 text-sm font-bold border border-slate-700/50 transition-all text-white shadow-lg shadow-cyan-500/10 border-cyan-500/30";
-                document.getElementById('lblTabCreate').className = "py-3 rounded-xl bg-slate-950/40 text-sm font-bold border border-slate-900 transition-all text-slate-400 hover:text-white";
-                document.getElementById('formJoin').classList.remove('hidden');
-                document.getElementById('formCreate').classList.add('hidden');
+                document.getElementById('categoryLobbyGateway').classList.remove('hidden');
+                document.getElementById('gateResponseBlock').classList.add('hidden');
+                document.getElementById('gateCreateBlock').classList.remove('hidden');
+                document.getElementById('gateJoinBlock').classList.add('hidden');
+                toggleGatewayTab('create');
+                document.getElementById('globalStatus').innerText = `Otaq Gözlənilir: ${currentCategory.toUpperCase()}`;
             }
         }
 
-        async function initHardwareMedia() {
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                document.getElementById('viewLocal').srcObject = localStream;
-            } catch(e) {
-                console.warn("Kamera və mikrofona icazə verilmədi və ya tapılmadı.", e);
-                localStream = new MediaStream();
+        function toggleGatewayTab(tab) {
+            if(tab === 'create') {
+                document.getElementById('tab-c').className = "py-2.5 text-xs font-bold rounded-lg text-white bg-slate-800 shadow";
+                document.getElementById('tab-j').className = "py-2.5 text-xs font-bold rounded-lg text-slate-400 hover:text-white";
+                document.getElementById('gateCreateBlock').classList.remove('hidden');
+                document.getElementById('gateJoinBlock').classList.add('hidden');
+            } else {
+                document.getElementById('tab-j').className = "py-2.5 text-xs font-bold rounded-lg text-white bg-slate-800 shadow";
+                document.getElementById('tab-c').className = "py-2.5 text-xs font-bold rounded-lg text-slate-400 hover:text-white";
+                document.getElementById('gateJoinBlock').classList.remove('hidden');
+                document.getElementById('gateCreateBlock').classList.add('hidden');
             }
         }
 
-        function startCodeExpiryTimer() {
-            let timeLeft = 120; // 2 Minutes
-            const display = document.getElementById('timerDisplay');
-            timerInterval = setInterval(() => {
+        async function initializeHardwareMediaTracks() {
+            if(currentCategory === 'media' || currentCategory === 'camera') {
+                try {
+                    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                    document.getElementById('localVideoNode').srcObject = localStream;
+                } catch(err) {
+                    console.warn("Kamera/Mikrofon tapılmadı və ya rədd edildi.", err);
+                    localStream = new MediaStream();
+                }
+            }
+        }
+
+        function startThreeMinuteExpiryCountdown() {
+            let timeLeft = 180; // 3 Minutes Exact
+            isCodeValid = true;
+            const timerElement = document.getElementById('dispTimer');
+            timerElement.className = "bg-red-500/10 border border-red-500/30 text-red-400 px-2 py-1 rounded-md text-xs font-mono font-bold";
+            
+            if(codeValidityTimer) clearInterval(codeValidityTimer);
+            
+            codeValidityTimer = setInterval(() => {
                 timeLeft--;
-                let mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-                let secs = (timeLeft % 60).toString().padStart(2, '0');
-                display.innerText = `${mins}:${secs}`;
+                let m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+                let s = (timeLeft % 60).toString().padStart(2, '0');
+                timerElement.innerText = `${m}:${s}`;
+                
                 if(timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    codeValid = false;
-                    display.className = "bg-red-950 text-red-600 px-2 py-1 rounded-md text-xs font-mono font-bold";
-                    display.innerText = "EXPIRED";
+                    clearInterval(codeValidityTimer);
+                    isCodeValid = false;
+                    timerElement.className = "bg-red-950 text-red-600 px-2 py-1 rounded-md text-xs font-mono font-bold";
+                    timerElement.innerText = "MÜDDƏT BİTDİ";
                 }
             }, 1000);
         }
 
-        async function actionCreateRoom() {
-            await initHardwareMedia();
-            roomLimit = document.getElementById('inputLimit').value.trim() || "Unlimited";
-            shortCode = Math.floor(1000 + Math.random() * 9000).toString(); // Secure 4-digit code
-            fullPeerId = "omni-" + shortCode + "-bridge-axis";
+        async function executeRoomGeneration() {
+            await initializeHardwareMediaTracks();
+            roomLimit = document.getElementById('roomLimitInput').value.trim() || "Unlimited";
+            
+            // Build absolute unique namespace per channel category safely
+            const uniqueQuadToken = Math.floor(1000 + Math.random() * 9000).toString();
+            generatedCode = uniqueQuadToken;
+            const targetPeerClusterId = `omni-axis-${currentCategory}-${uniqueQuadToken}`;
 
-            peer = new Peer(fullPeerId, { host: '1.peerjs.com', port: 443, secure: true, debug: 1 });
+            peer = new Peer(targetPeerClusterId, { host: '1.peerjs.com', port: 443, secure: true, debug: 1 });
             
             peer.on('open', () => {
-                document.getElementById('generatedCodeDisplay').innerText = shortCode;
-                document.getElementById('roomResultBlock').classList.remove('hidden');
-                document.getElementById('roomMetadataDisplay').innerText = `ROOM CODE: ${shortCode} | LIMIT: ${roomLimit}`;
-                startCodeExpiryTimer();
+                document.getElementById('dispCode').innerText = uniqueQuadToken;
+                document.getElementById('gateCreateBlock').classList.add('hidden');
+                document.getElementById('gateJoinBlock').classList.add('hidden');
+                document.getElementById('gateResponseBlock').classList.remove('hidden');
+                startThreeMinuteExpiryCountdown();
             });
 
             peer.on('call', (call) => {
                 call.answer(localStream);
-                call.on('stream', (rStream) => { handleRemoteStreamRendering(call.peer, rStream); });
+                call.on('stream', (remStream) => { injectRemoteStreamViewport(call.peer, remStream); });
             });
 
             peer.on('connection', (conn) => {
-                if(!codeValid) { conn.send({type:'system-error', msg:'Giriş kodunun etibarlılıq müddəti (2 dəqiqə) bitmişdir!'}); conn.close(); return; }
-                if(roomLimit !== "Unlimited" && connections.length >= parseInt(roomLimit)) { conn.send({type:'system-error', msg:'Otaq limiti dolmuşdur!'}); conn.close(); return; }
-                setupDataPipelineChannel(conn);
+                if(!isCodeValid) {
+                    conn.send({type:'err', reason:'Giriş kodunun 3 dəqiqəlik etibarlılıq müddəti bitib! Yenidən otaq yaradılmalıdır.'});
+                    setTimeout(() => conn.close(), 500);
+                    return;
+                }
+                if(roomLimit !== "Unlimited" && activeConnections.length >= parseInt(roomLimit)) {
+                    conn.send({type:'err', reason:'Otaq üçün təyin edilmiş iştirakçı limiti dolub.'});
+                    setTimeout(() => conn.close(), 500);
+                    return;
+                }
+                bindP2PDataPipelineEvents(conn);
             });
         }
 
-        async function actionJoinRoom() {
-            const entered = document.getElementById('inputJoinCode').value.trim();
-            if(entered.length !== 4) return alert("Zəhmət olmasa 4 rəqəmli kodu tam daxil edin.");
+        async function executeRoomConnection() {
+            const token = document.getElementById('roomJoinCodeInput').value.trim();
+            if(token.length !== 4) return alert("Keçid üçün 4 rəqəmli otaq kodunu yazın.");
             
-            await initHardwareMedia();
-            fullPeerId = "omni-" + entered + "-bridge-axis";
-            
+            await initializeHardwareMediaTracks();
+            generatedCode = token;
+            const targetPeerClusterId = `omni-axis-${currentCategory}-${token}`;
+
             peer = new Peer({ host: '1.peerjs.com', port: 443, secure: true, debug: 1 });
             
             peer.on('open', () => {
-                const conn = peer.connect(fullPeerId);
-                setupDataPipelineChannel(conn);
+                const dataConnection = peer.connect(targetPeerClusterId);
+                bindP2PDataPipelineEvents(dataConnection);
 
-                const call = peer.call(fullPeerId, localStream);
-                call.on('stream', (rStream) => { handleRemoteStreamRendering(call.peer, rStream); });
-                
-                document.getElementById('roomMetadataDisplay').innerText = `CONNECTED TO BRIDGE: ${entered}`;
-                document.getElementById('lobbyContainer').classList.add('hidden');
+                if(currentCategory === 'media' || currentCategory === 'camera') {
+                    const call = peer.call(targetPeerClusterId, localStream);
+                    call.on('stream', (remStream) => { injectRemoteStreamViewport(targetPeerClusterId, remStream); });
+                }
+
+                categoryActiveStates[currentCategory] = true;
+                updateGatewayUIState();
             });
         }
 
-        // Handle URL Direct Link Navigation Injection
+        function copyGatewayDirectLink() {
+            const directUrl = `${window.location.origin}${window.location.pathname}?cat=${currentCategory}&code=${generatedCode}`;
+            navigator.clipboard.writeText(directUrl);
+            alert("Bu kateqoriyaya birbaşa qoşulma linki kopyalandı!");
+        }
+
+        function dismissGatewayAndEnter() {
+            categoryActiveStates[currentCategory] = true;
+            updateGatewayUIState();
+        }
+
+        function leaveCurrentRoomState() {
+            if(peer) peer.destroy();
+            categoryActiveStates[currentCategory] = false;
+            activeConnections = [];
+            document.getElementById('mediaGrid').innerHTML = `
+                <div class="relative bg-slate-950 border border-cyan-500/20 rounded-2xl overflow-hidden aspect-video shadow-lg">
+                    <video id="localVideoNode" autoplay muted playsinline class="w-full h-full object-cover"></video>
+                    <span class="absolute bottom-3 left-3 bg-slate-900/90 px-2 py-0.5 rounded text-[10px] text-cyan-400 border border-slate-800">Siz</span>
+                </div>`;
+            window.location.reload();
+        }
+
+        // URL DEEP LINK PROCESSING PIPELINE
         window.addEventListener('DOMContentLoaded', () => {
-            setLanguage('az');
-            const urlParams = new URLSearchParams(window.location.search);
-            const linkRoom = urlParams.get('bridge');
-            if(linkRoom && linkRoom.length === 4) {
-                document.getElementById('inputJoinCode').value = linkRoom;
-                switchLobbyMode('join');
+            changeSystemLanguage('az');
+            const params = new URLSearchParams(window.location.search);
+            const injectedCat = params.get('cat');
+            const injectedCode = params.get('code');
+            if(injectedCat && injectedCode && injectedCode.length === 4) {
+                selectCategory(injectedCat);
+                document.getElementById('roomJoinCodeInput').value = injectedCode;
+                toggleGatewayTab('join');
             }
         });
 
-        function copyBridgeLink() {
-            const url = `${window.location.origin}${window.location.pathname}?bridge=${shortCode}`;
-            navigator.clipboard.writeText(url);
-            alert("Giriş üçün birbaşa P2P keçid linki kopyalandı!");
-        }
-
-        function enterWorkspace() {
-            document.getElementById('lobbyContainer').classList.add('hidden');
-        }
-
-        function setupDataPipelineChannel(conn) {
-            connections.push(conn);
-            conn.on('data', (data) => {
-                if(data.type === 'system-error') { alert(data.msg); window.location.reload(); }
-                if(data.type === 'chat') renderChatNode(data.sender, data.message, false);
-                if(data.type === 'secret') renderSecretExplosion(data.message);
-                if(data.type === 'file-start') setupFileBuffer(data);
-                if(data.type === 'file-chunk') chunkFileCollector(data);
-                if(data.type === 'snapshot-request') captureAndSendSnapshotBack();
-                if(data.type === 'snapshot-payload') document.getElementById('imgRemoteCapture').src = data.img;
-                if(data.type === 'game-sync') processSynchronizedGamePlay(data);
+        // BIND CHANNELS DATA PIPELINE
+        function bindP2PDataPipelineEvents(conn) {
+            activeConnections.push(conn);
+            conn.on('data', (payload) => {
+                if(payload.type === 'err') { alert(payload.reason); window.location.reload(); }
+                if(payload.type === 'chat') displayChatBubbleNode(payload.user, payload.msg, false);
+                if(payload.type === 'secret') activateSecretSelfDestructExplosion(payload.msg);
+                if(payload.type === 'file-init') setupFileBufferStream(payload);
+                if(payload.type === 'file-slice') collectFileChunkSlice(payload);
+                if(payload.type === 'snap-req') captureAndSendSnapshotPayload();
+                if(payload.type === 'snap-res') document.getElementById('imgRemote').src = payload.dataUrl;
+                if(payload.type === 'game-relay') handleSynchronizedGameSignals(payload);
             });
             conn.on('close', () => {
-                connections = connections.filter(c => c.peer !== conn.peer);
-                const badNode = document.getElementById(`vid-${conn.peer}`);
-                if(badNode) badNode.remove();
+                activeConnections = activeConnections.filter(c => c.peer !== conn.peer);
+                const el = document.getElementById(`node-${conn.peer}`);
+                if(el) el.remove();
             });
         }
 
-        function handleRemoteStreamRendering(peerId, stream) {
-            if(document.getElementById(`vid-${peerId}`)) return;
-            const grid = document.getElementById('videoContainerGrid');
-            const wrap = document.createElement('div');
-            wrap.id = `vid-${peerId}`;
-            wrap.className = "relative bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden aspect-video shadow-md";
-            const vid = document.createElement('video');
-            vid.srcObject = stream; vid.autoplay = true; vid.playsInline = true; vid.className = "w-full h-full object-cover";
-            const lbl = document.createElement('span');
-            lbl.className = "absolute bottom-3 left-3 bg-slate-900/80 px-2 py-0.5 rounded text-[10px] text-slate-300 border border-slate-800";
-            lbl.innerText = `Peer [${peerId.substring(5,9)}]`;
-            wrap.appendChild(vid); wrap.appendChild(lbl); grid.appendChild(wrap);
+        function injectRemoteStreamViewport(peerId, stream) {
+            if(document.getElementById(`node-${peerId}`)) return;
+            const grid = document.getElementById('mediaGrid');
+            const container = document.createElement('div');
+            container.id = `node-${peerId}`;
+            container.className = "relative bg-slate-950 border border-slate-900 rounded-2xl overflow-hidden aspect-video shadow-lg";
+            const video = document.createElement('video');
+            video.srcObject = stream; video.autoplay = true; video.playsInline = true; video.className = "w-full h-full object-cover";
+            const label = document.createElement('span');
+            label.className = "absolute bottom-3 left-3 bg-slate-900/90 px-2 py-0.5 rounded text-[10px] text-slate-400 border border-slate-800";
+            label.innerText = `Uzaqdakı Peer`;
+            container.appendChild(video); container.appendChild(label); grid.appendChild(container);
         }
 
-        function setActiveCategory(cat) {
-            document.querySelectorAll('.panel-node').forEach(p => p.classList.add('hidden'));
-            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-tab'));
-            document.getElementById(`panel-${cat}`).classList.remove('hidden');
-            document.getElementById(`catBtn-${cat}`).classList.add('active-tab');
-            if(cat === 'games') loadSelectedGameArchitecture();
-        }
-
-        // CHAT OPERATIONS
-        function handleChatSubmit(e) {
+        // CHAT CONTROLLERS
+        function broadcastChatMessage(e) {
             e.preventDefault();
-            const f = document.getElementById('chatInputField'); if(!f.value.trim()) return;
-            connections.forEach(c => c.send({type:'chat', sender:`Peer-${peer.id.substring(0,4)}`, message:f.value}));
-            renderChatNode("Siz", f.value, true); f.value = "";
+            const inp = document.getElementById('chatInput'); if(!inp.value.trim()) return;
+            activeConnections.forEach(c => c.send({type:'chat', user:`Peer-${peer.id.substring(0,3)}`, msg:inp.value}));
+            displayChatBubbleNode("Siz", inp.value, true); inp.value = "";
         }
-        function renderChatNode(sender, msg, isMe) {
-            const b = document.getElementById('chatBoxFlow');
-            const d = document.createElement('div');
-            d.className = `flex flex-col max-w-[80%] ${isMe ? 'ml-auto items-end':'mr-auto items-start'}`;
-            d.innerHTML = `<span class="text-[10px] text-slate-500 mb-0.5">${sender}</span><div class="px-3.5 py-2 rounded-2xl text-sm border ${isMe ? 'bg-cyan-600 border-cyan-500 text-white rounded-tr-none':'bg-slate-900 border-slate-800 text-slate-200 rounded-tl-none'}">${msg.replace(/</g,"&lt;").replace(/>/g,"&gt;")}</div>`;
-            b.appendChild(d); b.scrollTop = b.scrollHeight;
-        }
-
-        // SECRET WORDS LOGIC
-        function sendSecretMessage() {
-            const f = document.getElementById('inputSecretMsg'); if(!f.value.trim()) return;
-            connections.forEach(c => c.send({type:'secret', message:f.value}));
-            f.value = ""; alert("Gizli söz qarşı tərəfə ötürüldü!");
-        }
-        function renderSecretExplosion(msg) {
-            const z = document.getElementById('secretRevealZone');
-            z.innerText = msg; z.className = "min-h-[60px] bg-red-950/40 border border-dashed border-red-500 rounded-xl flex items-center justify-center p-3 text-center font-bold text-red-400 text-lg tracking-wide animate-pulse";
-            setTimeout(() => { z.innerText = ""; z.className = "min-h-[60px] bg-black/60 border border-dashed border-slate-800 rounded-xl flex items-center justify-center p-3 text-center font-bold text-slate-500 text-sm"; }, 5000);
+        function displayChatBubbleNode(user, msg, isMe) {
+            const container = document.getElementById('chatFlowBox');
+            const block = document.createElement('div');
+            block.className = `flex flex-col max-w-[75%] ${isMe ? 'ml-auto items-end':'mr-auto items-start'}`;
+            block.innerHTML = `<span class="text-[10px] text-slate-600 mb-0.5 font-mono">${user}</span>
+                <div class="px-4 py-2.5 rounded-2xl text-sm border ${isMe ? 'bg-cyan-600 border-cyan-500 text-white rounded-tr-none':'bg-slate-950 border-slate-900 text-slate-200 rounded-tl-none'}">${msg.replace(/</g,"&lt;")}</div>`;
+            container.appendChild(block); container.scrollTop = container.scrollHeight;
         }
 
-        // SNAPSHOT PROCESSOR
-        function triggerSnapshotDuel() {
-            connections.forEach(c => c.send({type:'snapshot-request'}));
-            captureLocalSnapshotPipeline('imgLocalCapture');
+        // SECRET SELF DESTRUCT SYSTEM
+        function broadcastSecretMessage() {
+            const inp = document.getElementById('secretInput'); if(!inp.value.trim()) return;
+            activeConnections.forEach(c => c.send({type:'secret', msg:inp.value}));
+            inp.value = ""; alert("Gizli söz qarşı tərəfə ötürüldü və uçuruldu!");
         }
-        function captureAndSendSnapshotBack() {
-            const dataUrl = captureLocalSnapshotPipeline('imgLocalCapture');
-            connections.forEach(c => c.send({type:'snapshot-payload', img:dataUrl}));
+        function activateSecretSelfDestructExplosion(msg) {
+            const box = document.getElementById('secretRevealZone');
+            box.innerText = msg; box.className = "min-h-[60px] bg-red-950/20 border border-dashed border-red-500 text-red-400 font-mono text-base font-bold flex items-center justify-center p-3 text-center rounded-xl animate-pulse";
+            setTimeout(() => { box.innerText = "Gözlənilir..."; box.className = "min-h-[60px] bg-black border border-dashed border-slate-900 rounded-xl flex items-center justify-center p-3 text-center text-sm font-bold text-slate-600"; }, 5000);
         }
-        function captureLocalSnapshotPipeline(targetImgId) {
-            const vid = document.getElementById('viewLocal');
+
+        // DUAL CAMERA SNAPSHOT ACTION
+        function triggerCameraSnapshotDuel() {
+            activeConnections.forEach(c => c.send({type:'snap-req'}));
+            freezeAndRenderLocalCanvasCapture('imgLocal');
+        }
+        function captureAndSendSnapshotPayload() {
+            const url = freezeAndRenderLocalCanvasCapture('imgLocal');
+            activeConnections.forEach(c => c.send({type:'snap-res', dataUrl:url}));
+        }
+        function freezeAndRenderLocalCanvasCapture(targetId) {
+            const vid = document.getElementById('localVideoNode');
             const canvas = document.createElement('canvas');
             canvas.width = vid.videoWidth || 640; canvas.height = vid.videoHeight || 480;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
             const u = canvas.toDataURL('image/jpeg');
-            document.getElementById(targetImgId).src = u;
+            document.getElementById(targetId).src = u;
             return u;
         }
 
-        // LARGE P2P FILE STREAMING CORE
-        let incomingFileBuffer = []; let incomingMeta = null;
-        function processFileSelection(input) {
-            const file = input.files[0]; if(!file) return;
-            const chunkSize = 16384; const reader = new FileReader(); let offset = 0;
-            connections.forEach(c => c.send({type:'file-start', name:file.name, size:file.size}));
-            reader.onload = function(e) {
-                connections.forEach(c => c.send({type:'file-chunk', data:e.target.result}));
-                offset += chunkSize;
-                if(offset < file.size) { readNextSlice(); }
-                else { document.getElementById('fileProgressBlock').innerText = "Fayl ötürülməsi tamamlandı!"; }
+        // FAST P2P FILE BUFFER COLLECTORS
+        let fileChunkPool = []; let activeFileMetadata = null;
+        function initiateFilePipeline(picker) {
+            const targetFile = picker.files[0]; if(!targetFile) return;
+            const maxSliceSize = 16384; const fileReader = new FileReader(); let byteOffset = 0;
+            activeConnections.forEach(c => c.send({type:'file-init', name:targetFile.name, size:targetFile.size}));
+            fileReader.onload = function(evt) {
+                activeConnections.forEach(c => c.send({type:'file-slice', raw:evt.target.result}));
+                byteOffset += maxSliceSize;
+                if(byteOffset < targetFile.size) { readNextSliceBlock(); }
+                else { document.getElementById('fileProgressOutput').innerText = "Faylın transferi uğurla yekunlaşdı!"; }
             };
-            function readNextSlice() { const slice = file.slice(offset, offset + chunkSize); reader.readAsArrayBuffer(slice); }
-            readNextSlice();
+            function readNextSliceBlock() { const chunk = targetFile.slice(byteOffset, byteOffset + maxSliceSize); fileReader.readAsArrayBuffer(chunk); }
+            readNextSliceBlock();
         }
-        function setupFileBuffer(meta) { incomingMeta = meta; incomingFileBuffer = []; document.getElementById('fileProgressBlock').innerText = `Yüklənir: ${meta.name}`; }
-        function chunkFileCollector(chunk) {
-            incomingFileBuffer.push(chunk.data);
-            if(incomingFileBuffer.length * 16384 >= incomingMeta.size) {
-                const blob = new Blob(incomingFileBuffer); const url = URL.createObjectURL(blob);
-                const a = document.createElement('a'); a.href = url; a.download = incomingMeta.name; a.innerText = `📥 ${incomingMeta.name} Yüklə`;
-                a.className = "block bg-emerald-600 text-white p-2 rounded-xl text-xs mt-2 text-center font-bold";
-                document.getElementById('fileProgressBlock').appendChild(a);
+        function setupFileBufferStream(meta) { activeFileMetadata = meta; fileChunkPool = []; document.getElementById('fileProgressOutput').innerText = `Yüklenir: ${meta.name}`; }
+        function collectFileChunkSlice(payload) {
+            fileChunkPool.push(payload.raw);
+            if(fileChunkPool.length * 16384 >= activeFileMetadata.size) {
+                const blob = new Blob(fileChunkPool); const objectUrl = URL.createObjectURL(blob);
+                const dlBtn = document.createElement('a'); dlBtn.href = objectUrl; dlBtn.download = activeFileMetadata.name; dlBtn.innerText = `📥 ${activeFileMetadata.name} Yüklə`;
+                dlBtn.className = "block bg-emerald-600 text-white font-bold text-xs p-2.5 rounded-xl mt-3 text-center shadow";
+                document.getElementById('fileProgressOutput').appendChild(dlBtn);
             }
         }
 
-        // 10+ INTERACTIVE P2P GAME ARCHITECTURE LOGIC ENGINE
-        function loadSelectedGameArchitecture() {
-            const g = document.getElementById('gameSelector').value;
-            const p = document.getElementById('gamePlayground');
-            p.innerHTML = "";
+        // 10+ SEAMLESS HIGH PERFORMANCE INTERACTIVE GAMES CORE
+        let clickMatchScoreLocal = 0;
+        function renderGamePlaygroundEngine() {
+            const selectedGame = document.getElementById('activeGameSelector').value;
+            const stage = document.getElementById('gameArenaPort');
+            stage.innerHTML = "";
 
-            if(g === 'tic') {
-                p.innerHTML = `<div class="text-center w-full max-w-xs"><div class="grid grid-cols-3 gap-2" id="ticGrid">` + 
-                    Array(9).fill(0).map((_,i)=>`<button onclick="playTic(${i})" id="t-${i}" class="bg-slate-900 border border-slate-800 aspect-square text-2xl font-black text-cyan-400 rounded-xl hover:bg-slate-800 transition-all"></button>`).join('') +
-                    `</div><button onclick="resetTic()" class="mt-4 text-xs bg-slate-800 px-3 py-1.5 rounded border border-slate-700">Yenidən Başla</button></div>`;
+            if(selectedGame === 'tic') {
+                stage.innerHTML = `<div class="w-full max-w-xs text-center"><div class="grid grid-cols-3 gap-2">` +
+                    Array(9).fill(0).map((_,i)=>`<button onclick="submitTicMove(${i})" id="cell-${i}" class="bg-slate-950 border border-slate-900 aspect-square text-xl font-bold text-cyan-400 hover:bg-slate-900 rounded-xl transition-all"></button>`).join('') +
+                    `</div></div>`;
             }
-            else if(g === 'click') {
-                p.innerHTML = `<div class="text-center w-full max-w-xs space-y-4">
-                    <h4 class="text-xs uppercase tracking-wider text-slate-400">Klik Sürəti Yarışı</h4>
-                    <div class="flex justify-between font-mono text-sm bg-black/40 p-2 rounded-xl"><span>Siz: <b id="cliL">0</b></span><span>Rəqib: <b id="cliR">0</b></span></div>
-                    <button onclick="clickSpeedHit()" class="w-full bg-gradient-to-r from-orange-500 to-amber-600 py-6 text-xl font-black text-white rounded-2xl shadow-lg shadow-orange-500/20 active:scale-95 transition-all">KLİK VUR!</button>
+            else if(selectedGame === 'click') {
+                clickMatchScoreLocal = 0;
+                stage.innerHTML = `<div class="w-full max-w-xs text-center space-y-4">
+                    <div class="flex justify-between text-xs bg-slate-950 border border-slate-900 p-3 rounded-xl font-mono"><span>Siz: <b id="sLocal">0</b></span><span>Rəqib: <b id="sRemote">0</b></span></div>
+                    <button onclick="triggerClickHit()" class="w-full bg-gradient-to-r from-orange-500 to-red-600 py-6 rounded-2xl text-white font-black text-lg shadow-lg active:scale-[0.98] transition-transform">SÜRƏTLİ KLİK VUR!</button>
                 </div>`;
-                gameScoreLocal = 0; gameScoreRemote = 0;
             }
-            else if(g === 'rps') {
-                p.innerHTML = `<div class="text-center w-full max-w-xs space-y-4">
+            else if(selectedGame === 'rps') {
+                stage.innerHTML = `<div class="w-full max-w-xs text-center space-y-4">
                     <div class="grid grid-cols-3 gap-2">
-                        <button onclick="playRPS('🪨')" class="bg-slate-900 border border-slate-800 p-4 rounded-xl text-2xl hover:bg-slate-800">🪨</button>
-                        <button onclick="playRPS('📄')" class="bg-slate-900 border border-slate-800 p-4 rounded-xl text-2xl hover:bg-slate-800">📄</button>
-                        <button onclick="playRPS('✂️')" class="bg-slate-900 border border-slate-800 p-4 rounded-xl text-2xl hover:bg-slate-800">✂️</button>
+                        <button onclick="submitRpsToken('🪨')" class="bg-slate-950 border border-slate-900 p-4 rounded-xl text-xl hover:bg-slate-900">🪨</button>
+                        <button onclick="submitRpsToken('📄')" class="bg-slate-950 border border-slate-900 p-4 rounded-xl text-xl hover:bg-slate-900">📄</button>
+                        <button onclick="submitRpsToken('✂️')" class="bg-slate-950 border border-slate-900 p-4 rounded-xl text-xl hover:bg-slate-900">✂️</button>
                     </div>
-                    <div id="rpsResult" class="text-xs text-amber-400 font-mono">Seçim edin...</div>
+                    <div id="rpsLogs" class="text-xs text-amber-400 font-mono">Birini seçin...</div>
                 </div>`;
             }
-            else if(g === 'math') {
-                p.innerHTML = `<div class="text-center w-full max-w-xs space-y-3">
-                    <div class="text-xl font-bold font-mono text-white" id="mathExp">14 + 27 = ?</div>
-                    <input type="number" id="mathAns" placeholder="Cavab" class="w-full bg-black/50 border border-slate-800 p-2 rounded-xl text-center font-bold text-cyan-400">
-                    <button onclick="checkMathAns()" class="w-full bg-cyan-600 text-xs py-2 rounded-lg font-bold">Cavabı Yoxla</button>
-                    <div id="mathStatus" class="text-[11px] text-slate-500 font-mono"></div>
+            else if(selectedGame === 'math') {
+                stage.innerHTML = `<div class="w-full max-w-xs text-center space-y-3">
+                    <div class="text-lg font-bold font-mono text-white">45 + 38 = ?</div>
+                    <input type="number" id="mathInputAns" class="w-full bg-black border border-slate-900 rounded-xl p-2.5 text-center text-cyan-400 font-bold">
+                    <button onclick="verifyMathCalculus()" class="w-full bg-cyan-600 text-xs py-2 rounded-lg font-bold">Yoxla</button>
+                    <div id="mathStatusBox" class="text-xs font-mono text-slate-500"></div>
                 </div>`;
             }
-            else if(g === 'guess') {
-                p.innerHTML = `<div class="text-center w-full max-w-xs space-y-3">
-                    <div class="text-xs text-slate-400">1-100 arası gizli rəqəmi tapın</div>
-                    <input type="number" id="guessNum" class="w-full bg-slate-900 p-2 rounded-xl text-center font-bold text-white">
-                    <button onclick="submitGuessNum()" class="w-full bg-blue-600 py-2 rounded-xl text-xs font-bold">Təxmin Et</button>
-                    <div id="guessStatus" class="text-xs font-mono text-amber-400"></div>
+            else if(selectedGame === 'guess') {
+                stage.innerHTML = `<div class="w-full max-w-xs text-center space-y-3">
+                    <span class="text-xs text-slate-500">1-50 arası rəqəmi təxmin edin:</span>
+                    <input type="number" id="guessInpField" class="w-full bg-slate-950 border border-slate-900 p-2 text-center rounded-xl font-bold text-white">
+                    <button onclick="checkTargetGuessNumber()" class="w-full bg-blue-600 py-2 rounded-xl text-xs font-bold">Təxmin Et</button>
+                    <div id="guessLog" class="text-xs font-mono text-amber-400"></div>
                 </div>`;
             }
-            else if(g === 'memory') {
-                p.innerHTML = `<div class="text-center space-y-3"><div class="grid grid-cols-4 gap-2">` + 
-                    Array(8).fill(0).map((_,i)=>`<button onclick="flipMemoryCard(${i})" id="m-${i}" class="w-12 h-12 bg-slate-800 text-transparent font-bold text-lg rounded-xl flex items-center justify-center">🃏</button>`).join('') +
-                    `</div><div id="memoStatus" class="text-xs text-slate-500">Matrisi tamamlayın</div></div>`;
+            else if(selectedGame === 'dice') {
+                stage.innerHTML = `<div class="text-center space-y-3"><div class="text-4xl" id="diceFace">🎲</div>
+                    <button onclick="rollArenaDiceTrigger()" class="bg-indigo-600 text-xs px-4 py-2 rounded-xl font-bold">Zər At</button>
+                    <div id="diceLogOut" class="text-xs font-mono text-slate-500">Zər gözlənilir.</div></div>`;
             }
-            else if(g === 'dice') {
-                p.innerHTML = `<div class="text-center space-y-3"><div class="text-4xl animate-bounce" id="diceBox">🎲</div>
-                    <button onclick="rollDiceArena()" class="bg-indigo-600 text-xs px-4 py-2 rounded-xl font-bold">Zər At</button>
-                    <div id="diceStatus" class="text-xs font-mono text-slate-400"></div></div>`;
+            else if(selectedGame === 'coin') {
+                stage.innerHTML = `<div class="text-center space-y-3"><div class="w-14 h-14 bg-amber-500 text-black font-bold rounded-full flex items-center justify-center mx-auto shadow" id="coinFace">🪙</div>
+                    <button onclick="flipQuantumCoinTrigger()" class="bg-slate-950 border border-slate-900 text-xs px-4 py-2 rounded-xl text-white">Yazı yoxsa Poza?</button></div>`;
             }
-            else if(g === 'coin') {
-                p.innerHTML = `<div class="text-center space-y-3"><div class="w-16 h-16 bg-amber-500 text-black font-black text-xl rounded-full flex items-center justify-center mx-auto shadow-lg" id="coinArt">🫓</div>
-                    <button onclick="flipQuantumCoin()" class="bg-slate-800 border border-slate-700 text-xs px-4 py-2 rounded-xl">Yazı-Poza Flipper</button></div>`;
-            }
-            else if(g === 'words') {
-                p.innerHTML = `<div class="text-center w-full max-w-xs space-y-2"><div class="bg-slate-900 p-3 font-mono text-emerald-400 text-lg rounded-xl">CYBERPUNK</div>
-                    <input type="text" id="wordRaceInput" oninput="checkWordRace(this)" placeholder="Yuxarıdakı sözü eynilə bura yazın" class="w-full bg-black border border-slate-800 text-sm p-2 rounded-xl text-center text-white">
-                    <div id="wordStatus" class="text-xs text-slate-500 font-mono">Kim daha tez yazacaq?</div></div>`;
-            }
-            else if(g === 'reaction') {
-                p.innerHTML = `<div class="text-center w-full max-w-xs"><button onclick="hitReflexTrigger()" id="reflexBtn" class="w-full bg-red-600 py-10 rounded-2xl text-white font-extrabold text-base tracking-wide shadow-md">GÖZLƏYİN...</button></div>`;
-                setTimeout(() => { const b=document.getElementById('reflexBtn'); if(b){b.className="w-full bg-emerald-500 py-10 rounded-2xl text-black font-black text-xl animate-ping"; b.innerText="BASIN!!"; reflexStartTime = Date.now();} }, 2000 + Math.random() * 3000);
+            else if(selectedGame === 'reaction') {
+                stage.innerHTML = `<div class="w-full max-w-xs"><button onclick="clickReactionTrigger()" id="reactArenaBtn" class="w-full bg-red-950/40 border border-red-900/40 py-10 rounded-2xl text-red-400 font-bold text-sm tracking-widest">RƏNGİN DƏYİŞMƏSİNİ GÖZLƏYİN...</button></div>`;
+                setTimeout(() => { const b=document.getElementById('reactArenaBtn'); if(b){b.className="w-full bg-emerald-500 py-10 rounded-2xl text-black font-black text-xl animate-pulse"; b.innerText="KLİK VUR!!!"; reflexClockStart = Date.now();} }, 2000 + Math.random() * 3000);
             }
         }
 
-        // P2P GAME EVENT DISTRIBUTORS & SYNCHRONIZERS
-        function playTic(idx) { connections.forEach(c => c.send({type:'game-sync', sub:'tic', cell:idx, mark:'O'})); document.getElementById(`t-${idx}`).innerText = 'X'; }
-        function clickSpeedHit() { gameScoreLocal++; document.getElementById('cliL').innerText = gameScoreLocal; connections.forEach(c => c.send({type:'game-sync', sub:'click', val:gameScoreLocal})); }
-        function playRPS(choice) { connections.forEach(c => c.send({type:'game-sync', sub:'rps', move:choice})); document.getElementById('rpsResult').innerText = `Sizin Seçiminiz: ${choice}. Rəqib gözlənilir...`; }
-        function checkMathAns() { if(document.getElementById('mathAns').value === "41") { document.getElementById('mathStatus').innerText = "Düzdür! 🎉"; connections.forEach(c => c.send({type:'game-sync', sub:'math', status:'win'})); } }
-        function submitGuessNum() { if(document.getElementById('guessNum').value === "42") { document.getElementById('guessStatus').innerText = "Təbrik edirik, tapdınız!"; } }
-        function flipMemoryCard(i) { const b = document.getElementById(`m-${i}`); b.innerText = "⭐"; b.className = "w-12 h-12 bg-cyan-900 text-white font-bold text-lg rounded-xl flex items-center justify-center"; }
-        function rollDiceArena() { const score = Math.floor(1 + Math.random() * 6); document.getElementById('diceBox').innerText = score; document.getElementById('diceStatus').innerText = `Siz ${score} atdınız.`; connections.forEach(c => c.send({type:'game-sync', sub:'dice', val:score})); }
-        function flipQuantumCoin() { const r = Math.random() > 0.5 ? 'YAZI' : 'POZA'; document.getElementById('coinArt').innerText = r === 'YAZI' ? '🪙':'🔘'; alert(`Nəticə: ${r}`); }
-        function checkWordRace(el) { if(el.value.toUpperCase() === "CYBERPUNK") { document.getElementById('wordStatus').innerText = "Siz Qalib Gəldiniz! 🏆"; connections.forEach(c => c.send({type:'game-sync', sub:'words', win:true})); } }
-        let reflexStartTime = 0; function hitReflexTrigger() { const b = document.getElementById('reflexBtn'); if(b && b.innerText === "BASIN!!") { const diff = Date.now() - reflexStartTime; b.className="w-full bg-slate-900 py-10 rounded-2xl text-cyan-400 font-mono text-sm"; b.innerText = `Sürətiniz: ${diff}ms`; } }
+        // GAME P2P SYNCHRONIZER TRANSMITTERS
+        function submitTicMove(i) { activeConnections.forEach(c => c.send({type:'game-relay', mode:'tic', index:i, token:'O'})); document.getElementById(`cell-${i}`).innerText = 'X'; }
+        function triggerClickHit() { clickMatchScoreLocal++; document.getElementById('sLocal').innerText = clickMatchScoreLocal; activeConnections.forEach(c => c.send({type:'game-relay', mode:'click', score:clickMatchScoreLocal})); }
+        function submitRpsToken(t) { activeConnections.forEach(c => c.send({type:'game-relay', mode:'rps', token:t})); document.getElementById('rpsLogs').innerText = `Siz [${t}] seçdiniz. Rəqib gözlənilir...`; }
+        function verifyMathCalculus() { if(document.getElementById('mathInputAns').value === "83") { document.getElementById('mathStatusBox').innerText = "Düzdür! 🏆"; activeConnections.forEach(c => c.send({type:'game-relay', mode:'math', solved:true})); } }
+        function checkTargetGuessNumber() { if(document.getElementById('guessInpField').value === "24") { document.getElementById('guessLog').innerText = "Düzgün tapdınız!"; } }
+        function rollArenaDiceTrigger() { const val = Math.floor(1 + Math.random() * 6); document.getElementById('diceFace').innerText = val; document.getElementById('diceLogOut').innerText = `Siz ${val} atdınız.`; activeConnections.forEach(c => c.send({type:'game-relay', mode:'dice', score:val})); }
+        function flipQuantumCoinTrigger() { const side = Math.random() > 0.5 ? 'YAZI':'POZA'; document.getElementById('coinFace').innerText = side==='YAZI' ? '🪙':'🔘'; alert(`Nəticə: ${side}`); }
+        let reflexClockStart = 0; function clickReactionTrigger() { const btn = document.getElementById('reactArenaBtn'); if(btn && btn.innerText === "KLİK VUR!!!") { const ms = Date.now() - reflexClockStart; btn.className="w-full bg-slate-950 border border-slate-900 py-10 rounded-2xl text-cyan-400 font-mono text-sm"; btn.innerText = `Sürətiniz: ${ms}ms`; } }
 
-        function processSynchronizedGamePlay(data) {
-            if(data.sub === 'tic') { const btn = document.getElementById(`t-${data.cell}`); if(btn) btn.innerText = data.mark; }
-            if(data.sub === 'click') { const opp = document.getElementById('cliR'); if(opp) opp.innerText = data.val; }
-            if(data.sub === 'rps') { document.getElementById('rpsResult').innerText = `Rəqib Seçimi Etdi! (${data.move})`; }
-            if(data.sub === 'math') { document.getElementById('mathStatus').innerText = "Rəqib düzgün cavabı tapdı! 😮"; }
-            if(data.sub === 'dice') { document.getElementById('diceStatus').innerText = `Rəqib ${data.val} atdı.`; }
-            if(data.sub === 'words') { document.getElementById('wordStatus').innerText = "Təəssüf, rəqib sizdən daha tez yazdı! 🏁"; }
+        function handleSynchronizedGameSignals(payload) {
+            if(payload.mode === 'tic') { const cell = document.getElementById(`cell-${payload.index}`); if(cell) cell.innerText = payload.token; }
+            if(payload.mode === 'click') { const rem = document.getElementById('sRemote'); if(rem) rem.innerText = payload.score; }
+            if(payload.mode === 'rps') { document.getElementById('rpsLogs').innerText = `Rəqib seçimini etdi! Hərəkət: ${payload.token}`; }
+            if(payload.mode === 'math') { document.getElementById('mathStatusBox').innerText = "Rəqib sizdən tez tapdı! 😮"; }
+            if(payload.mode === 'dice') { document.getElementById('diceLogOut').innerText = `Rəqib ${payload.score} atdı.`; }
         }
 
-        // HARDWARE AUDIO-VIDEO TRACK SWITCHERS
-        function triggerMuteAudio() { const t = localStream.getAudioTracks()[0]; if(t) { t.enabled = !t.enabled; document.getElementById('ctrlMic').classList.toggle('bg-red-600'); } }
-        function triggerMuteVideo() { const t = localStream.getVideoTracks()[0]; if(t) { t.enabled = !t.enabled; document.getElementById('ctrlCam').classList.toggle('bg-red-600'); } }
+        // HARDWARE TOGGLERS
+        function toggleAudioTrack() { const track = localStream.getAudioTracks()[0]; if(track) { track.enabled = !track.enabled; document.getElementById('btnMic').classList.toggle('bg-red-600'); } }
+        function toggleVideoTrack() { const track = localStream.getVideoTracks()[0]; if(track) { track.enabled = !track.enabled; document.getElementById('btnCam').classList.toggle('bg-red-600'); } }
     </script>
 </body>
 </html>
